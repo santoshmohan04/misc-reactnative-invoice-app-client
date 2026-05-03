@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {Body, Button, Card, CardItem, Container, Content, Text, Toast} from 'native-base';
+import {Body, Button, Card, CardItem, Container, Text, Toast} from 'native-base';
+import {ScrollView} from 'react-native';
 import {Field, reduxForm} from 'redux-form';
 import renderTextInput from '../components/reduxFormRenderers/RenderTextInput';
 import {phone, required} from '../utils/redux.form.utils';
@@ -74,7 +75,7 @@ class Profile extends Component<{}> {
             <Container>
                 {editUser.isLoading && <Loader/>}
                 <InnerPageHeader title={'Profile'}/>
-                <Content padder contentContainerStyle={{display: 'flex', flex: 1, justifyContent: 'center'}}>
+                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
                     <Card transparent>
                         <CardItem>
                             <Field name={'company'}
@@ -124,7 +125,7 @@ class Profile extends Component<{}> {
                             </Body>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
             </Container>
         );
     };

@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Actions} from 'react-native-router-flux';
-import {Button, Card, CardItem, Container, Content, Footer, FooterTab, Text, Toast} from 'native-base';
+import {Button, Card, CardItem, Container, Footer, FooterTab, Text, Toast} from 'native-base';
+import {ScrollView} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import {Field, reduxForm} from 'redux-form';
 import {compose} from 'redux';
@@ -78,7 +79,7 @@ class ItemForm extends Component<{}> {
             <Container>
                 {editItem.isLoading && <Loader/>}
                 <InnerPageHeader title={'Item'}/>
-                <Content padder>
+                <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
                     <Card style={{paddingHorizontal: 10}}>
                         <CardItem cardBody>
                             <Field name={'name'}
@@ -107,7 +108,7 @@ class ItemForm extends Component<{}> {
                                    component={renderTextInput}/>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
                 <Footer>
                     <FooterTab>
                         <Button padder block primary onPress={handleSubmit(this.onSubmit)}>

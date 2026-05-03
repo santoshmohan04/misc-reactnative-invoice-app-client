@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {StyleSheet} from 'react-native';
-import {Container, Content, Text} from 'native-base';
+import {Container, Text} from 'native-base';
+import {ScrollView} from 'react-native';
 
 /**
  * Placeholder component for empty lists

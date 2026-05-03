@@ -6,7 +6,6 @@ import {
     Card,
     CardItem,
     Container,
-    Content,
     Fab,
     Footer,
     FooterTab,
@@ -15,6 +14,7 @@ import {
     Text,
     Toast,
 } from 'native-base';
+import {ScrollView, View} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import renderItemsTextInputArray from '../../components/reduxFormRenderers/RenderItemsInputArray';
 import {change, Field, FieldArray, formValueSelector, reduxForm} from 'redux-form';
@@ -139,8 +139,8 @@ class InvoiceForm extends Component<{}> {
             <Container>
                 {editInvoice.isLoading && <Loader/>}
                 <InnerPageHeader title={'Invoice'}/>
-                <Content style={{flex: 1}} contentContainerStyle={{flex: 1}}>
-                    <Content padder>
+                <View style={{flex: 1}}>
+                    <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
                         <Card style={{paddingHorizontal: 10}}>
                             <CardItem cardBody>
                                 <Field name={'number'}
@@ -241,14 +241,14 @@ class InvoiceForm extends Component<{}> {
                             </CardItem>
                         </Card>
                         <Card transparent><CardItem/><CardItem/></Card>
-                    </Content>
+                    </ScrollView>
                     <Fab
                         style={{backgroundColor: '#5067FF'}}
                         position="bottomRight"
                         onPress={handleSubmit(this.onSendInvoice)}>
                         <Icon name="ios-send"/>
                     </Fab>
-                </Content>
+                </View>
                 <Footer>
                     <FooterTab>
                         <Button full onPress={handleSubmit(this.onSubmit)}>

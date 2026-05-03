@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {Button, Card, CardItem, Container, Content, Footer, FooterTab, Text, Toast} from 'native-base';
+import {Button, Card, CardItem, Container, Footer, FooterTab, Text, Toast} from 'native-base';
+import {ScrollView} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import {Field, reduxForm} from 'redux-form';
 import {compose} from 'redux';
@@ -77,7 +78,7 @@ class CustomerForm extends Component<{}> {
             <Container>
                 {editCustomer.isLoading && <Loader/>}
                 <InnerPageHeader title={'Customer'}/>
-                <Content padder>
+                <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
                     <Card style={{paddingHorizontal: 10}}>
                         <CardItem cardBody listItemPadding>
                             <Field name={'name'}
@@ -140,7 +141,7 @@ class CustomerForm extends Component<{}> {
                                    component={renderTextInput}/>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
                 <Footer>
                     <FooterTab>
                         <Button padder block primary onPress={handleSubmit(this.onSubmit)}>

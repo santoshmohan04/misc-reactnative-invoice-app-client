@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {Body, Button, Card, CardItem, Container, Content, Text} from 'native-base';
+import {Body, Button, Card, CardItem, Container, Text} from 'native-base';
+import {ScrollView} from 'react-native';
 
 import {Actions} from 'react-native-router-flux';
 import Logo from '../../components/Logo';
@@ -55,7 +56,7 @@ class Login extends Component<{}> {
         return (
             <Container>
                 {loginUser.isLoading && <Loader/>}
-                <Content padder contentContainerStyle={{display: 'flex', flex: 1, justifyContent: 'center'}}>
+                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
                     <Logo/>
                     <Card transparent>
                         <CardItem>
@@ -91,7 +92,7 @@ class Login extends Component<{}> {
                             </Button>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
             </Container>
         );
     };

@@ -6,7 +6,8 @@ import {Actions} from 'react-native-router-flux';
 import {registerNewUser} from '../../actions/auth.actions';
 import Loader from '../../components/Loader';
 import {ErrorUtils} from '../../utils/error.utils';
-import {Body, Button, Card, CardItem, Container, Content, Text} from 'native-base';
+import {Body, Button, Card, CardItem, Container, Text} from 'native-base';
+import {ScrollView} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import {email, phone, required} from '../../utils/redux.form.utils';
 import renderSelectOption from '../../components/reduxFormRenderers/RenderSelectOption';
@@ -59,7 +60,7 @@ class SignUp extends Component<{}> {
             <Container style={{flex: 1, justifyContent: 'center'}}>
                 {registerUser.isLoading && <Loader/>}
                 <InnerPageHeader title={'Sign Up as Merchant'}/>
-                <Content padder contentContainerStyle={{display: 'flex', flex: 1, justifyContent: 'center'}}>
+                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
                     <Card transparent>
                         <CardItem>
                             <Field name={'name'}
@@ -126,7 +127,7 @@ class SignUp extends Component<{}> {
                             </Button>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
             </Container>
         );
     };

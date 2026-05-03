@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Router, Scene} from 'react-native-router-flux';
+import * as RNRF from 'react-native-router-flux';
 import {
     CustomerForm,
     Customers,
@@ -12,18 +12,40 @@ import {
     SignUp,
     Splash,
 } from '../pages/index';
-import {Root} from 'native-base';
 import {connect} from 'react-redux';
 import NavBar from './NavBar';
 
+// Fallback for native-base if it fails to load
+let Root;
+try {
+    const NB = require('native-base');
+    Root = NB.Root;
+    console.log('native-base Root loaded');
+} catch (e) {
+    console.error('Failed to load native-base:', e);
+    Root = ({children}) => children;
+}
+
+const Router = RNRF.Router || (RNRF.default && RNRF.default.Router);
+const Scene = RNRF.Scene || (RNRF.default && RNRF.default.Scene);
+
 /**
  * React-native-router-flux router component.
- * Divides scenes into root category for authentication, and app category for app session
- * Wrapped with native-base root to enable some native-base features such as Toast which needs context on Android devices
  */
-export default class Routes extends Component<{}> {
+class Routes extends Component<{}> {
 
     render() {
+        console.log('Routes render - Router exists:', !!Router);
+
+        if (!Router || !Scene) {
+            const {View, Text} = require('react-native');
+            return (
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Text>Router not found!</Text>
+                </View>
+            );
+        }
+
         const RouterWithRedux = connect()(Router);
 
         return (
@@ -53,3 +75,5 @@ export default class Routes extends Component<{}> {
         );
     }
 }
+
+export default Routes;

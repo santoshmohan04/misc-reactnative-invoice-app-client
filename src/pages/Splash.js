@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {Card, CardItem, Container, Content} from 'native-base';
+import {Card, CardItem, Container} from 'native-base';
+import {ScrollView} from 'react-native';
 import {Actions} from 'react-native-router-flux';
 import Logo from '../components/Logo';
 import {BackHandler} from 'react-native';
@@ -43,13 +44,13 @@ class Splash extends Component<{}> {
     render() {
         return (
             <Container>
-                <Content padder contentContainerStyle={{display: 'flex', flex: 1, justifyContent: 'center'}}>
+                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
                     <Card transparent>
                         <CardItem>
                             <Logo/>
                         </CardItem>
                     </Card>
-                </Content>
+                </ScrollView>
             </Container>
         );
     };

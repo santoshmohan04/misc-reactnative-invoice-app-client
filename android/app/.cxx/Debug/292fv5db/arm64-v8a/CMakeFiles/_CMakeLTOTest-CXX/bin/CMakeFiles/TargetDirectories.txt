@@ -1,0 +1,4 @@
+D:/Misc Projects/misc-reactnative-invoice-app-client/android/app/.cxx/Debug/292fv5db/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
+D:/Misc Projects/misc-reactnative-invoice-app-client/android/app/.cxx/Debug/292fv5db/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
+D:/Misc Projects/misc-reactnative-invoice-app-client/android/app/.cxx/Debug/292fv5db/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
+D:/Misc Projects/misc-reactnative-invoice-app-client/android/app/.cxx/Debug/292fv5db/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir
