@@ -1,4 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { Storage } from 'redux-persist';
 
 /**
@@ -11,17 +13,45 @@ const toSecureStoreKey = (key: string): string => {
   return key.replace(/[^a-zA-Z0-9._-]/g, '_');
 };
 
+const isWeb = Platform.OS === 'web';
+
 const secureStorage: Storage = {
   setItem: async (key: string, value: string) => {
-    await SecureStore.setItemAsync(toSecureStoreKey(key), value);
+    if (isWeb) {
+      await AsyncStorage.setItem(key, value);
+      return true;
+    }
+
+    try {
+      await SecureStore.setItemAsync(toSecureStoreKey(key), value);
+    } catch (error) {
+      // Fallback keeps persistence functional if native secure APIs are unavailable.
+      await AsyncStorage.setItem(key, value);
+    }
     return true;
   },
   getItem: async (key: string) => {
-    const value = await SecureStore.getItemAsync(toSecureStoreKey(key));
-    return value;
+    if (isWeb) {
+      return AsyncStorage.getItem(key);
+    }
+
+    try {
+      return await SecureStore.getItemAsync(toSecureStoreKey(key));
+    } catch (error) {
+      return AsyncStorage.getItem(key);
+    }
   },
   removeItem: async (key: string) => {
-    await SecureStore.deleteItemAsync(toSecureStoreKey(key));
+    if (isWeb) {
+      await AsyncStorage.removeItem(key);
+      return true;
+    }
+
+    try {
+      await SecureStore.deleteItemAsync(toSecureStoreKey(key));
+    } catch (error) {
+      await AsyncStorage.removeItem(key);
+    }
     return true;
   },
 };

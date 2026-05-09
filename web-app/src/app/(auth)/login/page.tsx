@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useLoginMutation } from '@/store/apiSlice';
+import { useLazyGetCurrentUserQuery, useLoginMutation } from '@/store/apiSlice';
 import { setCredentials } from '@/store/authSlice';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -22,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
+  const [getCurrentUser] = useLazyGetCurrentUserQuery();
 
   const {
     register,
@@ -34,10 +34,32 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const result = await login(data).unwrap();
-      dispatch(setCredentials({ user: result.user, token: result.token }));
+
+      if (!result.token) {
+        toast.error('Login failed: access token missing from server response');
+        return;
+      }
+
+      dispatch(setCredentials({
+        user: result.user ?? null,
+        token: result.token,
+        refreshToken: result.refreshToken ?? null,
+      }));
+
+      try {
+        const profile = await getCurrentUser(undefined, true).unwrap();
+        dispatch(setCredentials({
+          user: profile,
+          token: result.token,
+          refreshToken: result.refreshToken ?? null,
+        }));
+      } catch {
+        // Keep session valid even if profile hydration fails.
+      }
+
       toast.success('Login successful');
       router.push('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Login failed');
     }
   };
@@ -91,7 +113,7 @@ export default function LoginPage() {
               href="/signup"
               className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Link>
           </div>
         </form>

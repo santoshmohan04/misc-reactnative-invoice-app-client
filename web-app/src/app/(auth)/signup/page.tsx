@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +33,7 @@ export default function SignupPage() {
       await signup(data).unwrap();
       toast.success('Account created successfully');
       router.push('/login');
-    } catch (error) {
+    } catch {
       toast.error('Signup failed');
     }
   };

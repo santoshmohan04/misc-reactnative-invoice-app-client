@@ -10,18 +10,22 @@ export const registerNewUser = (payload) => {
             const response = await fetchApi('/user/register', 'POST', payload, 200);
 
             if (response.success) {
+                if (!response.token) {
+                    throw {
+                        success: false,
+                        responseBody: {message: 'Login succeeded but no access token was returned.'},
+                    };
+                }
                 dispatch({
                     type: 'REGISTER_USER_SUCCESS',
                 });
                 dispatch({
                     type: 'AUTH_USER_SUCCESS',
                     token: response.token,
+                    refreshToken: response.refreshToken,
                 });
-                dispatch({
-                    type: 'GET_USER_SUCCESS',
-                    payload: response.responseBody,
-                });
-
+                // Fetch full user profile separately (login response only returns tokens)
+                dispatch(getUser());
                 return response;
             } else {
                 throw response;
@@ -46,17 +50,22 @@ export const loginUser = (payload) => {
             const response = await fetchApi('/user/login', 'POST', payload, 200);
 
             if (response.success) {
+                if (!response.token) {
+                    throw {
+                        success: false,
+                        responseBody: {message: 'Login succeeded but no access token was returned.'},
+                    };
+                }
                 dispatch({
                     type: 'LOGIN_USER_SUCCESS',
                 });
                 dispatch({
                     type: 'AUTH_USER_SUCCESS',
                     token: response.token,
+                    refreshToken: response.refreshToken,
                 });
-                dispatch({
-                    type: 'GET_USER_SUCCESS',
-                    payload: response.responseBody,
-                });
+                // Fetch full user profile separately (login response only returns tokens)
+                dispatch(getUser());
                 return response;
             } else {
                 throw response;

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/store/authSlice';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { apiSlice, useLogoutUserMutation } from '@/store/apiSlice';
+import type { RootState } from '@/store';
 import {
   Home,
   FileText,
@@ -41,11 +43,25 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
+  const [logoutUser] = useLogoutUserMutation();
   const { theme, setTheme } = useTheme();
-  const { user } = useSelector((state: any) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser(undefined).unwrap();
+    } catch {
+      // Local logout still proceeds if API logout fails.
+    }
+
     dispatch(logout());
+    dispatch(apiSlice.util.resetApiState());
     router.push('/login');
   };
 

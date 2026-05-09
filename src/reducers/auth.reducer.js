@@ -5,7 +5,8 @@ const authData = (state = {}, action) => {
         case 'AUTH_USER_SUCCESS':
             return {
                 token: action.token,
-                isLoggedIn: true,
+                refreshToken: action.refreshToken || null,
+                isLoggedIn: !!action.token,
             };
         case 'AUTH_USER_FAIL':
         case 'REGISTER_USER_FAIL':
@@ -13,6 +14,7 @@ const authData = (state = {}, action) => {
         case 'USER_LOGGED_OUT_SUCCESS':
             return {
                 token: null,
+                refreshToken: null,
                 isLoggedIn: false,
             };
         default:

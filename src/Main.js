@@ -10,11 +10,12 @@ import {connect} from 'react-redux';
  */
 class Main extends Component<{}> {
     render() {
-        const {authData: {isLoggedIn}} = this.props;
+        const {authData: {isLoggedIn, token}} = this.props;
+        const hasSession = Boolean(isLoggedIn && token);
         return (
             <View style={styles.container}>
                 <StatusBar backgroundColor={'#1c313a'} barStyle={'light-content'}/>
-                <Routes isLoggedIn={isLoggedIn}/>
+                <Routes isLoggedIn={hasSession}/>
             </View>
         );
     };

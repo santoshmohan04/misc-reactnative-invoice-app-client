@@ -68,11 +68,13 @@ export const sendInvoiceByEmail = (payload) => {
             dispatch({
                 type: 'SEND_INVOICE_EMAIL_LOADING',
             });
-            const paymentSessionResponse = await fetchApi('/payment/new', 'POST', payload, 200, token);
+            // Create payment record first (POST /payment/create)
+            const paymentSessionResponse = await fetchApi('/payment/create', 'POST', payload, 200, token);
             if (paymentSessionResponse.success) {
                 console.log(paymentSessionResponse);
+                // Send invoice email; backend needs invoiceId to look up customer and build payment link
                 const emailResponse = await fetchApi('/invoice/send', 'POST',
-                    paymentSessionResponse.responseBody.value, 200, token);
+                    { invoiceId: paymentSessionResponse.responseBody.invoice }, 200, token);
                 if (emailResponse.success) {
                     console.log(emailResponse);
                     dispatch({

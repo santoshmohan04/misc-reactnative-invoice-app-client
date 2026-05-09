@@ -84,12 +84,13 @@ class InvoiceForm extends Component {
             if (!response.success) {
                 throw response;
             } else {
+                // Build payment params matching backend Payment model: { invoice, amount, currency, method }
+                const invoice = response.responseBody;
                 let paymentParams = {
-                    invoice: response.responseBody.value._id,
-                    status: false,
-                    paid_on: null,
-                    amount_paid: 0,
-                    amount_due: response.responseBody.value.total,
+                    invoice: invoice._id,
+                    amount: invoice.total,
+                    currency: (this.props.getUser?.userDetails?.base_currency) || 'USD',
+                    method: 'card',
                 };
                 response = await this.props.dispatch(sendInvoiceByEmail(paymentParams));
                 if (!response || !response.success) {
