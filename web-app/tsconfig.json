@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@contracts/*": ["../packages/api-contracts/src/*"],
+      "@shared-api/*": ["../packages/shared-api/src/*"],
+      "@shared-utils/*": ["../packages/shared-utils/src/*"]
     }
   },
   "include": [

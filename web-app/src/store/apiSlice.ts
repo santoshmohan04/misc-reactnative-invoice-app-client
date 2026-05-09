@@ -5,63 +5,19 @@ import {
   fetchBaseQuery,
   createApi,
 } from '@reduxjs/toolkit/query/react';
+import { API_ENDPOINTS, LoginRequestDto, SignupRequestDto } from '@contracts/index';
+import {
+  extractAccessToken,
+  extractRefreshToken,
+  RefreshMutex,
+  unwrapSuccessPayload,
+  withRetry,
+} from '@shared-api/index';
 import { logout, updateTokens } from './authSlice';
 import type { RootState } from './index';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
-
-const unwrapSuccessPayload = <T>(responseBody: T) => {
-  if (responseBody && typeof responseBody === 'object' && 'data' in (responseBody as Record<string, unknown>)) {
-    return (responseBody as { data: unknown }).data;
-  }
-  return responseBody;
-};
-
-const extractAccessToken = (response: Response | undefined, parsedBody: unknown): string | null => {
-  const headerToken = response?.headers.get('x-auth')
-    || response?.headers.get('x-access-token')
-    || response?.headers.get('authorization');
-
-  if (headerToken) {
-    return headerToken.replace(/^Bearer\s+/i, '');
-  }
-
-  const payload = unwrapSuccessPayload(parsedBody);
-  if (payload && typeof payload === 'object') {
-    const tokenPayload = payload as {
-      accessToken?: string;
-      token?: string;
-      authToken?: string;
-      tokens?: { accessToken?: string; token?: string };
-    };
-    return tokenPayload.accessToken
-      || tokenPayload.token
-      || tokenPayload.authToken
-      || tokenPayload.tokens?.accessToken
-      || tokenPayload.tokens?.token
-      || null;
-  }
-
-  return null;
-};
-
-const extractRefreshToken = (response: Response | undefined, parsedBody: unknown): string | null => {
-  const headerRefreshToken = response?.headers.get('x-refresh-token');
-  if (headerRefreshToken) {
-    return headerRefreshToken;
-  }
-
-  const payload = unwrapSuccessPayload(parsedBody);
-  if (payload && typeof payload === 'object') {
-    const refreshPayload = payload as {
-      refreshToken?: string;
-      tokens?: { refreshToken?: string };
-    };
-    return refreshPayload.refreshToken || refreshPayload.tokens?.refreshToken || null;
-  }
-
-  return null;
-};
+const refreshMutex = new RefreshMutex();
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -79,7 +35,19 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   api,
   extraOptions,
 ) => {
-  let result = await rawBaseQuery(args, api, extraOptions);
+  let result = await withRetry(
+    async () => {
+      const queryResult = await rawBaseQuery(args, api, extraOptions);
+      if (queryResult.error && (typeof queryResult.error.status === 'number' ? queryResult.error.status >= 500 : true)) {
+        throw { status: queryResult.error.status };
+      }
+      return queryResult;
+    },
+    {
+      maxAttempts: 2,
+      baseDelayMs: 200,
+    },
+  ).catch(() => rawBaseQuery(args, api, extraOptions));
 
   if (result.error?.status !== 401) {
     return result;
@@ -93,39 +61,50 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     return result;
   }
 
-  const refreshEndpoints = ['/user/refresh', '/auth/refresh'];
+  const refreshedTokens = await refreshMutex.run(async () => {
+    const refreshEndpoints = [API_ENDPOINTS.user.refreshPrimary, API_ENDPOINTS.user.refreshFallback];
 
-  for (const refreshUrl of refreshEndpoints) {
-    const refreshResult = await rawBaseQuery(
-      {
-        url: refreshUrl,
-        method: 'POST',
-        body: { refreshToken },
-        headers: {
-          'x-refresh-token': refreshToken,
+    for (const refreshUrl of refreshEndpoints) {
+      const refreshResult = await rawBaseQuery(
+        {
+          url: refreshUrl,
+          method: 'POST',
+          body: { refreshToken },
+          headers: {
+            'x-refresh-token': refreshToken,
+          },
         },
-      },
-      api,
-      extraOptions,
-    );
+        api,
+        extraOptions,
+      );
 
-    if (refreshResult.error) {
-      continue;
+      if (refreshResult.error) {
+        continue;
+      }
+
+      const newAccessToken = extractAccessToken(refreshResult.meta?.response, refreshResult.data);
+      const newRefreshToken = extractRefreshToken(refreshResult.meta?.response, refreshResult.data) || refreshToken;
+
+      if (!newAccessToken) {
+        continue;
+      }
+
+      return {
+        token: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
     }
 
-    const newAccessToken = extractAccessToken(refreshResult.meta?.response, refreshResult.data);
-    const newRefreshToken = extractRefreshToken(refreshResult.meta?.response, refreshResult.data) || refreshToken;
+    return null;
+  });
 
-    if (!newAccessToken) {
-      continue;
-    }
-
-    api.dispatch(updateTokens({ token: newAccessToken, refreshToken: newRefreshToken }));
-    result = await rawBaseQuery(args, api, extraOptions);
+  if (!refreshedTokens?.token) {
+    api.dispatch(logout());
     return result;
   }
 
-  api.dispatch(logout());
+  api.dispatch(updateTokens(refreshedTokens));
+  result = await rawBaseQuery(args, api, extraOptions);
   return result;
 };
 
@@ -134,8 +113,8 @@ export const apiSlice = createApi({
   tagTypes: ['Invoice', 'Customer', 'Item', 'User'],
   endpoints: (builder) => ({
     login: builder.mutation({
-      query: (credentials) => ({
-        url: '/user/login',
+      query: (credentials: LoginRequestDto) => ({
+        url: API_ENDPOINTS.user.login,
         method: 'POST',
         body: credentials,
       }),
@@ -162,8 +141,8 @@ export const apiSlice = createApi({
       },
     }),
     signup: builder.mutation({
-      query: (userData) => ({
-        url: '/user/register',
+      query: (userData: SignupRequestDto) => ({
+        url: API_ENDPOINTS.user.register,
         method: 'POST',
         body: userData,
       }),
@@ -191,27 +170,27 @@ export const apiSlice = createApi({
     }),
     getCurrentUser: builder.query({
       query: () => ({
-        url: '/user/user',
+        url: API_ENDPOINTS.user.profile,
       }),
       providesTags: ['User'],
       transformResponse: (response: unknown) => unwrapSuccessPayload(response),
     }),
     logoutUser: builder.mutation({
       query: () => ({
-        url: '/user/logout',
+        url: API_ENDPOINTS.user.logout,
         method: 'DELETE',
       }),
     }),
     getInvoices: builder.query({
       query: () => ({
-        url: '/invoice/all',
+        url: API_ENDPOINTS.invoice.all,
       }),
       providesTags: ['Invoice'],
       transformResponse: (response: unknown) => unwrapSuccessPayload(response),
     }),
     createInvoice: builder.mutation({
       query: (invoice) => ({
-        url: '/invoice/edit',
+        url: API_ENDPOINTS.invoice.edit,
         method: 'POST',
         body: invoice,
       }),
@@ -220,14 +199,14 @@ export const apiSlice = createApi({
     }),
     getCustomers: builder.query({
       query: () => ({
-        url: '/customer/all',
+        url: API_ENDPOINTS.customer.all,
       }),
       providesTags: ['Customer'],
       transformResponse: (response: unknown) => unwrapSuccessPayload(response),
     }),
     createCustomer: builder.mutation({
       query: (customer) => ({
-        url: '/customer/edit',
+        url: API_ENDPOINTS.customer.edit,
         method: 'POST',
         body: customer,
       }),
@@ -236,14 +215,14 @@ export const apiSlice = createApi({
     }),
     getItems: builder.query({
       query: () => ({
-        url: '/item/all',
+        url: API_ENDPOINTS.item.all,
       }),
       providesTags: ['Item'],
       transformResponse: (response: unknown) => unwrapSuccessPayload(response),
     }),
     createItem: builder.mutation({
       query: (item) => ({
-        url: '/item/edit',
+        url: API_ENDPOINTS.item.edit,
         method: 'POST',
         body: item,
       }),

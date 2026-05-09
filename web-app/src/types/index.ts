@@ -5,12 +5,16 @@ export interface User {
 }
 
 export interface Invoice {
-  id: string;
-  customerId: string;
+  id?: string;
+  _id?: string;
+  customerId?: string;
+  customer?: string;
   items: InvoiceItem[];
   total: number;
-  status: 'draft' | 'sent' | 'paid';
-  createdAt: string;
+  status: 'draft' | 'sent' | 'paid' | 'cancelled';
+  createdAt?: string;
+  issued?: string;
+  number?: string;
 }
 
 export interface InvoiceItem {
@@ -20,7 +24,8 @@ export interface InvoiceItem {
 }
 
 export interface Customer {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   phone?: string;
@@ -28,7 +33,8 @@ export interface Customer {
 }
 
 export interface Item {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   description?: string;
   price: number;

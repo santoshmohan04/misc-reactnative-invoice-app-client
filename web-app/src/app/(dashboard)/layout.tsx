@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { apiSlice, useLogoutUserMutation } from '@/store/apiSlice';
 import type { RootState } from '@/store';
+import { clearAuthCookie } from '@/lib/auth-cookie';
 import {
   Home,
   FileText,
@@ -21,8 +22,12 @@ import {
   X,
   Moon,
   Sun,
+  Search,
+  WifiOff,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -40,6 +45,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
@@ -47,11 +54,38 @@ export default function DashboardLayout({
   const { theme, setTheme } = useTheme();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
+  const filteredNavigation = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return navigation;
+    }
+
+    const keyword = searchTerm.toLowerCase();
+    return navigation.filter((item) => item.name.toLowerCase().includes(keyword));
+  }, [searchTerm]);
+
   useEffect(() => {
     if (!isAuthenticated) {
+      toast.error('Session expired. Please sign in again.');
       router.replace('/login');
     }
   }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleOnlineState = () => setIsOffline(!window.navigator.onLine);
+
+    handleOnlineState();
+    window.addEventListener('online', handleOnlineState);
+    window.addEventListener('offline', handleOnlineState);
+
+    return () => {
+      window.removeEventListener('online', handleOnlineState);
+      window.removeEventListener('offline', handleOnlineState);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -62,6 +96,7 @@ export default function DashboardLayout({
 
     dispatch(logout());
     dispatch(apiSlice.util.resetApiState());
+    clearAuthCookie();
     router.push('/login');
   };
 
@@ -78,7 +113,7 @@ export default function DashboardLayout({
             </button>
           </div>
           <nav className="mt-4">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -108,7 +143,7 @@ export default function DashboardLayout({
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Invoice SaaS</h1>
           </div>
           <nav className="mt-8 flex-1 px-2 space-y-1">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -132,6 +167,12 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="lg:pl-64">
+        {isOffline ? (
+          <div className="flex items-center gap-2 bg-amber-100 px-4 py-2 text-sm text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            <WifiOff className="h-4 w-4" />
+            Offline mode detected. Requests will resume when connection is restored.
+          </div>
+        ) : null}
         <div className="sticky top-0 z-10 flex h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <button
             type="button"
@@ -146,11 +187,18 @@ export default function DashboardLayout({
                 <label htmlFor="search-field" className="sr-only">
                   Search
                 </label>
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
-                    {/* Search icon */}
+                <div className="relative w-full max-w-sm text-gray-400 focus-within:text-gray-600">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <Search className="h-4 w-4" />
                   </div>
-                  {/* Search input */}
+                  <Input
+                    id="search-field"
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search dashboard sections"
+                    className="pl-9"
+                  />
                 </div>
               </div>
             </div>

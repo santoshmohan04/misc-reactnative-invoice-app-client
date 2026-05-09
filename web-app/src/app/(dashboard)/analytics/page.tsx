@@ -1,93 +1,103 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { useMemo, useState } from 'react';
+import {
+  DateRangeFilter,
+  ChartCard,
+  RevenueTrendChart,
+  StatusDistributionChart,
+  PaymentOutcomeChart,
+  TopCustomersChart,
+} from '@/components/analytics';
+import {
+  buildInvoiceStatusDistribution,
+  buildPaymentOutcomeSeries,
+  buildRevenueTrend,
+  buildTopCustomers,
+  filterInvoicesByDateRange,
+  type AnalyticsDateRange,
+} from '@/lib/analytics/buildSeries';
+import { useGetCustomersQuery, useGetInvoicesQuery } from '@/store/apiSlice';
+import type { Customer, Invoice } from '@/types';
 
-const monthlyData = [
-  { name: 'Jan', revenue: 4000, invoices: 12 },
-  { name: 'Feb', revenue: 3000, invoices: 19 },
-  { name: 'Mar', revenue: 5000, invoices: 15 },
-  { name: 'Apr', revenue: 4500, invoices: 25 },
-  { name: 'May', revenue: 6000, invoices: 22 },
-  { name: 'Jun', revenue: 5500, invoices: 30 },
-];
+const getDefaultRange = (): AnalyticsDateRange => {
+  const today = new Date();
+  const from = new Date();
+  from.setDate(today.getDate() - 90);
 
-const statusData = [
-  { name: 'Paid', value: 60, color: '#10b981' },
-  { name: 'Pending', value: 30, color: '#f59e0b' },
-  { name: 'Overdue', value: 10, color: '#ef4444' },
-];
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: today.toISOString().slice(0, 10),
+  };
+};
 
 export default function AnalyticsPage() {
+  const [dateRange, setDateRange] = useState<AnalyticsDateRange>(getDefaultRange);
+  const { data: invoicesData = [], isLoading: invoicesLoading } = useGetInvoicesQuery({});
+  const { data: customersData = [], isLoading: customersLoading } = useGetCustomersQuery({});
+
+  const invoices = invoicesData as Invoice[];
+  const customers = customersData as Customer[];
+
+  const filteredInvoices = useMemo(
+    () => filterInvoicesByDateRange(invoices, dateRange),
+    [invoices, dateRange],
+  );
+
+  const revenueTrend = useMemo(() => buildRevenueTrend(filteredInvoices), [filteredInvoices]);
+  const statusDistribution = useMemo(
+    () => buildInvoiceStatusDistribution(filteredInvoices),
+    [filteredInvoices],
+  );
+  const paymentOutcomes = useMemo(
+    () => buildPaymentOutcomeSeries(filteredInvoices),
+    [filteredInvoices],
+  );
+  const topCustomers = useMemo(
+    () => buildTopCustomers(filteredInvoices, customers),
+    [filteredInvoices, customers],
+  );
+
+  const isLoading = invoicesLoading || customersLoading;
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
-        <p className="text-gray-600 dark:text-gray-400">Insights into your business performance</p>
+        <p className="text-gray-600 dark:text-gray-400">Revenue, invoices, payments, and customer trends</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <DateRangeFilter value={dateRange} onChange={setDateRange} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="h-[340px] animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ChartCard title="Revenue Trends" subtitle="Monthly revenue in selected range">
+              <RevenueTrendChart data={revenueTrend} />
+            </ChartCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Performance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="invoices" fill="#3b82f6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+            <ChartCard title="Invoice Status Distribution" subtitle="Draft vs sent vs paid vs cancelled">
+              <StatusDistributionChart data={statusDistribution} />
+            </ChartCard>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ChartCard title="Payment Outcomes" subtitle="Success, pending, and failed payment states">
+              <PaymentOutcomeChart data={paymentOutcomes} />
+            </ChartCard>
+
+            <ChartCard title="Top Customers" subtitle="Top customers by invoice revenue">
+              <TopCustomersChart data={topCustomers} />
+            </ChartCard>
+          </div>
+        </>
+      )}
     </div>
   );
 }

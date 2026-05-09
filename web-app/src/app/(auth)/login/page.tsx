@@ -9,6 +9,7 @@ import { setCredentials } from '@/store/authSlice';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { setAuthCookie } from '@/lib/auth-cookie';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -45,6 +46,7 @@ export default function LoginPage() {
         token: result.token,
         refreshToken: result.refreshToken ?? null,
       }));
+      setAuthCookie(result.token);
 
       try {
         const profile = await getCurrentUser(undefined, true).unwrap();
