@@ -85,7 +85,7 @@ class CustomerForm extends Component<{}> {
                                    keyboardType={'default'}
                                    placeholder={'Customer Name'}
                                    icon={'ios-contact'}
-                                   valdiate={[required]}
+                                   validate={[required]}
                                    component={renderTextInput}/>
                         </CardItem>
                         <CardItem cardBody>

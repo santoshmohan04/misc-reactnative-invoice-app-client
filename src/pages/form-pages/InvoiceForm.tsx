@@ -236,7 +236,7 @@ class InvoiceForm extends Component<Props> {
                                        }}
                                        format={value => (formatCurrency(value, currency))}
                                        normalize={value => (normalizeCurrency(value))}
-                                       valdiate={[required, number]}
+                                       validate={[required, number]}
                                        component={renderTextInput}/>
                             </CardItem>
                             <CardItem cardBody style={{backgroundColor: 'lightgray', paddingHorizontal: 10}}>

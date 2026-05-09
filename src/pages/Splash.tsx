@@ -40,7 +40,7 @@ class Splash extends Component<Props> {
                 await SplashScreen.hideAsync();
                 Actions.replace('home');
             } else {
-                throw 'Something went wrong. Check connection or try again later.';
+                throw new Error('Something went wrong. Check connection or try again later.');
             }
         }).catch((e) => {
             const newError = new ErrorUtils(e);

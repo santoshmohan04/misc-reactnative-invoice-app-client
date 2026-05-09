@@ -48,7 +48,7 @@ class InvoiceForm extends Component {
      * @param values
      * @returns {Promise<{success}|*>}
      */
-    sendInvoiceData = async (values: any) => {
+    sendInvoiceData = async (values) => {
         try {
             const response = await this.props.dispatch(editInvoice(values));
             if (!response || !response.success) {
@@ -94,7 +94,7 @@ class InvoiceForm extends Component {
      * @param values
      * @returns {Promise<{success}|*>}
      */
-    sendInvoiceByEmail = async (values: any) => {
+    sendInvoiceByEmail = async (values) => {
         try {
             let response = await this.sendInvoiceData(values);
             if (!response.success) {
@@ -125,11 +125,11 @@ class InvoiceForm extends Component {
         }
     };
 
-    onSendInvoice = (values: any) => {
+    onSendInvoice = (values) => {
         this.sendInvoiceByEmail(values);
     };
 
-    onSubmit = (values: any) => {
+    onSubmit = (values) => {
         this.sendInvoiceData(values);
     };
 
@@ -225,7 +225,7 @@ class InvoiceForm extends Component {
                                        }}
                                        format={value => (formatCurrency(value, currency))}
                                        normalize={value => (normalizeCurrency(value))}
-                                       valdiate={[required, number]}
+                                       validate={[required, number]}
                                        component={renderTextInput}/>
                             </CardItem>
                             <CardItem cardBody style={{backgroundColor: 'lightgray', paddingHorizontal: 10}}>
