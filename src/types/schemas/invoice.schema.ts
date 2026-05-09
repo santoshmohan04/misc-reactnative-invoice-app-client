@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const invoiceItemSchema = z.object({
   _id: z.string().optional(),
-  description: z.string().min(1, 'Description is required'),
+  item: z.string().optional(), // item ID or full item object
+  description: z.string().optional(),
   quantity: z.number().min(0, 'Quantity must be >= 0'),
   price: z.number().min(0, 'Price must be >= 0'),
   discount: z.number().min(0).max(100).optional(),
@@ -11,18 +12,14 @@ export const invoiceItemSchema = z.object({
 
 export const invoiceSchema = z.object({
   _id: z.string().optional(),
-  customer: z.object({
-    _id: z.string(),
-    name: z.string().optional(),
-  }),
-  invoice_number: z.string().min(1, 'Invoice number required'),
-  issued_date: z.string().refine((v) => Boolean(Date.parse(v)), { message: 'Invalid date' }),
-  due_date: z.string().refine((v) => Boolean(Date.parse(v)), { message: 'Invalid date' }),
+  customer: z.any().optional(), // accepts string ID or full customer object
+  number: z.string().min(1, 'Invoice number required'),
+  issued: z.date().or(z.string()).optional(),
+  due: z.date().or(z.string()).optional(),
   notes: z.string().optional(),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required'),
   subtotal: z.number().min(0).optional(),
-  discount_total: z.number().min(0).optional(),
-  tax_total: z.number().min(0).optional(),
+  discount: z.number().min(0).optional(),
   total: z.number().min(0).optional(),
 });
 

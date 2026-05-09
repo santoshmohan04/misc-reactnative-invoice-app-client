@@ -17,13 +17,7 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
  * Auth selector hooks
  */
 export const useAuth = () =>
-  useAppSelector((state) => ({
-    user: state.auth.user,
-    token: state.auth.token,
-    isAuthenticated: state.auth.isAuthenticated,
-    isLoading: state.auth.isLoading,
-    error: state.auth.error,
-  }));
+  useAppSelector((state) => state.auth);
 
 export const useAuthUser = () => useAppSelector((state) => state.auth.user);
 export const useAuthToken = () => useAppSelector((state) => state.auth.token);

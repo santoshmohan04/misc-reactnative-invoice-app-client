@@ -6,16 +6,44 @@ import {PersistGate} from 'redux-persist/integration/react';
 import { TamaguiProvider } from 'tamagui';
 import { store, persistor } from './src/store';
 import tamaguiConfig from './tamagui.config';
+import { initSentry } from './src/shared/observability/sentry';
+import { startJsThreadFreezeMonitor, trackAppStartup } from './src/shared/observability/performance';
+import ErrorBoundary from './src/shared/errors/ErrorBoundary';
+import GlobalToastHost from './src/shared/errors/GlobalToastHost';
+import { logger } from './src/shared/logger';
 
 import Main from './src/Main';
 
+const appStartedAt = performance.now();
+initSentry();
+startJsThreadFreezeMonitor();
+
 const App = () => {
+    const onRender = React.useCallback((id, phase, actualDuration) => {
+        if (actualDuration > 120) {
+            logger.warn('Slow render detected', 'render_profiler', {
+                id,
+                phase,
+                actualDuration: Math.round(actualDuration),
+            });
+        }
+    }, []);
+
+    React.useEffect(() => {
+        trackAppStartup(appStartedAt);
+    }, []);
+
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <TamaguiProvider config={tamaguiConfig}>
                 <Provider store={store}>
                     <PersistGate loading={null} persistor={persistor}>
-                        <Main/>
+                        <ErrorBoundary>
+                            <GlobalToastHost />
+                            <React.Profiler id="root-app" onRender={onRender}>
+                                <Main/>
+                            </React.Profiler>
+                        </ErrorBoundary>
                     </PersistGate>
                 </Provider>
             </TamaguiProvider>

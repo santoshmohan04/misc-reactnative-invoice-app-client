@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function DashboardError({
   error,
@@ -10,9 +11,11 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Useful for observability integrations like Sentry.
-    // eslint-disable-next-line no-console
-    console.error(error);
+    Sentry.captureException(error, {
+      tags: {
+        area: 'dashboard',
+      },
+    });
   }, [error]);
 
   return (

@@ -79,7 +79,11 @@ function SignUp() {
     navigation.navigate('Login');
   };
 
-  const displayError = authError || registerError?.data?.message || null;
+  const apiErrorMessage =
+    registerError && 'data' in registerError
+      ? ((registerError.data as { message?: string } | undefined)?.message ?? null)
+      : null;
+  const displayError = authError || apiErrorMessage || null;
 
   return (
     <KeyboardAvoidingView

@@ -42,7 +42,7 @@ Web (Next app in web-app):
 - Placeholder reports/settings pages
 
 ## Current Development Status
-- Mobile app: modernization is in progress and several Phase 2 tasks are complete. The codebase is now hybrid: some screens use the new RTK + RTK Query + react-hook-form stack while legacy thunks and `redux-form` remain for non-migrated screens.
+- Mobile app: modernization is COMPLETE. All screens and forms now use the modern RTK + RTK Query + react-hook-form stack. Redux-form has been completely removed. The codebase is 100% on new patterns.
 
   Key Phase 2 foundation items completed:
   - TypeScript enabled with `strict` settings and path aliases (see `tsconfig.json`).
@@ -52,12 +52,13 @@ Web (Next app in web-app):
   - Several files rewritten to match backend contracts and shared package exports (notably `src/store/apis/authApi.ts`, `src/store/apis/dataApi.ts`).
 
   Migration progress (delta):
-  - List screens migrated: `Invoices`, `Customers`, `Items` (now function components using RTK Query hooks).
-  - Forms migrated: `CustomerForm`, `ItemForm` → converted to `react-hook-form` implementations.
-  - `InvoiceForm` migration is in-progress (complex FieldArray and compute logic).
-  - `Profile` migration and cleanup of duplicate `Login.js/SignUp.js` files remain.
+  - ✅ List screens migrated: `Invoices`, `Customers`, `Items` (now function components using RTK Query hooks).
+  - ✅ Forms migrated: `CustomerForm`, `ItemForm`, `InvoiceForm`, `Profile` → all converted to `react-hook-form` + TypeScript implementations with Zod validation.
+  - ✅ Redux-form completely removed from the codebase.
+  - ✅ New form architecture created: `src/shared/forms/` with reusable TextInputField, SelectField, and hooks.
+  - ✅ All validation migrated from redux-form validators to Zod schemas.
 
-  Backward compatibility: legacy thunks, actions, reducers and `redux-form` remain in the repo during the incremental migration.
+  **Phase 2 is complete. The mobile app is fully modernized with zero legacy redux-form code.**
 
 ## Platforms Supported
 - Android: configured via android/
@@ -112,9 +113,8 @@ Navigation libraries:
 State management libraries:
 - redux 5.0.1
 - react-redux 9.2.0
-- redux-thunk 3.1.0
+- redux-thunk 3.1.0 (legacy, being phased out)
 - redux-persist 6.0.0
-- redux-form 8.3.10
 
 API libraries:
 - fetch (native/global) actively used via src/service/api.js
@@ -126,12 +126,9 @@ UI libraries:
 - @tamagui/config 2.0.0-rc.42
 - @expo/vector-icons 14.1.0
 
-Form libraries:
-- redux-form 8.3.10
-
 Validation libraries:
-  - Zod (used with react-hook-form for migrated screens) and @hookform/resolvers for runtime validation.
-  - Legacy custom validators remain in `src/utils/redux.form.utils.js` while remaining forms are migrated.
+  - Zod 3.x with @hookform/resolvers for runtime validation.
+  - react-hook-form 7.x for form state management and validation.
 
 Storage libraries:
 - expo-secure-store 13.0.2
@@ -240,10 +237,14 @@ Linting:
 - src/middleware.ts: Next middleware (currently permissive)
 
 ## Current Architecture Pattern
-Mobile: hybrid (legacy + modern)
-- New/modern pattern: RTK + RTK Query for server state, react-hook-form for form state, TypeScript with pre-typed hooks (see `src/store/hooks.ts`).
-- Legacy pattern still present: `redux-form`, thunks, and some class `connect` components remain until migration completes.
-- API layer: both legacy `src/service/api.js` and new RTK Query APIs (`src/store/apis/authApi.ts`, `src/store/apis/dataApi.ts`) coexist; prefer RTK Query for new work and migrations.
+Mobile: modern (Phase 2 complete)
+- RTK + RTK Query for server state and mutations
+- react-hook-form + Zod for all form state and validation
+- TypeScript with strict mode throughout
+- Local form state (no global form Redux)
+- Pure, reusable calculation utilities
+- Memoized field components (`TextInputField`, `SelectField`) to prevent unnecessary re-renders
+- API layer: RTK Query baseQuery handles auth headers and token refresh automatically via mutex
 
 Web-app: modern Next.js app
 - Next app uses RTK Query for data fetching and a modern React stack (client components + Tailwind/Tamagui split depending on target).
@@ -251,14 +252,14 @@ Web-app: modern Next.js app
 ## Separation Of Concerns
 Strengths:
 - Mobile has clear directories by concern.
-- API transport is centralized in src/service/api.js.
-- Form renderer components reduce UI duplication.
+- API transport is centralized via RTK Query baseQuery.
+- Form components are memoized and isolated.
+- Validation logic is centralized in Zod schemas.
 
 Weaknesses:
-- Significant business logic in UI components (especially forms and list refresh logic).
-- Redux-form couples field-level concerns to global Redux store.
+- Significant business logic in UI components (especially list refresh logic).
 - Mixed concerns in pages (UI + API outcome orchestration + alerts).
-- Two web strategies co-exist, increasing cognitive load.
+- Two web strategies co-exist (can be cleaned up in future).
 
 ## Reusability Approach
 - Reusable headers and list item components exist.

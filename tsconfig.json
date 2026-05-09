@@ -21,7 +21,21 @@
       "@utils/*": ["./src/utils/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@components/*": ["./src/components/*"],
-      "@services/*": ["./src/service/*"]
+      "@services/*": ["./src/service/*"],
+      "@features/*": ["./src/features/*"]
     }
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "tamagui.config.ts"
+  ],
+  "exclude": [
+    "web-app/**",
+    "__tests__/**",
+    "android/**",
+    "ios/**",
+    "node_modules/**"
+  ]
 }

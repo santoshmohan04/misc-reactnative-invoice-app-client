@@ -1,6 +1,6 @@
 export const unwrapSuccessPayload = <T>(responseBody: T): unknown => {
   if (responseBody && typeof responseBody === 'object' && 'data' in (responseBody as Record<string, unknown>)) {
-    return (responseBody as { data: unknown }).data;
+    return ((responseBody as unknown) as { data: unknown }).data;
   }
   return responseBody;
 };

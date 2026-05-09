@@ -15,6 +15,7 @@ import {
 } from '@shared-api/index';
 import { logout, updateTokens } from './authSlice';
 import type { RootState } from './index';
+import { observeApiError, observeApiLatency } from '@/lib/observability';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
 const refreshMutex = new RefreshMutex();
@@ -35,6 +36,9 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   api,
   extraOptions,
 ) => {
+  const operation = typeof args === 'string' ? args : args.url;
+  const startedAt = performance.now();
+
   let result = await withRetry(
     async () => {
       const queryResult = await rawBaseQuery(args, api, extraOptions);
@@ -49,7 +53,15 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     },
   ).catch(() => rawBaseQuery(args, api, extraOptions));
 
+  if (result.error) {
+    observeApiError(String(operation ?? 'request'), result.error, {
+      phase: 'initial_request',
+      status: result.error.status,
+    });
+  }
+
   if (result.error?.status !== 401) {
+    observeApiLatency(String(operation ?? 'request'), startedAt, !result.error);
     return result;
   }
 
@@ -79,6 +91,10 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
       );
 
       if (refreshResult.error) {
+        observeApiError('auth_refresh', refreshResult.error, {
+          refreshUrl,
+          status: refreshResult.error.status,
+        });
         continue;
       }
 
@@ -100,11 +116,21 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 
   if (!refreshedTokens?.token) {
     api.dispatch(logout());
+    observeApiLatency(String(operation ?? 'request'), startedAt, false);
     return result;
   }
 
   api.dispatch(updateTokens(refreshedTokens));
   result = await rawBaseQuery(args, api, extraOptions);
+
+  if (result.error) {
+    observeApiError(String(operation ?? 'request'), result.error, {
+      phase: 'retry_after_refresh',
+      status: result.error.status,
+    });
+  }
+
+  observeApiLatency(String(operation ?? 'request'), startedAt, !result.error);
   return result;
 };
 

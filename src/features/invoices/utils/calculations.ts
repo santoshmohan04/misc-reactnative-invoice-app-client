@@ -1,4 +1,4 @@
-import type { InvoiceItem } from '../../types/schemas/invoice.schema';
+import type { InvoiceItem } from '../../../types/schemas/invoice.schema';
 
 export function calculateSubtotal(items: InvoiceItem[]): number {
   return items.reduce((sum, it) => {

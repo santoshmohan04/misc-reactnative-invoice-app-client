@@ -1,12 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { User } from '../../types';
 
 interface AuthState {
-  user: {
-    id?: string;
-    email?: string;
-    name?: string;
-    company?: string;
-  } | null;
+  user: User | null;
   token: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
@@ -34,7 +30,7 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        user: any;
+        user: User;
         access_token?: string;
         token?: string;
         refresh_token?: string;
@@ -43,8 +39,8 @@ const authSlice = createSlice({
     ) => {
       const { user, access_token, token, refresh_token, refreshToken } = action.payload;
       state.user = user;
-      state.token = access_token || token;
-      state.refreshToken = refresh_token || refreshToken;
+      state.token = access_token ?? token ?? null;
+      state.refreshToken = refresh_token ?? refreshToken ?? null;
       state.isAuthenticated = !!(state.token && state.user);
       state.error = null;
     },
@@ -52,7 +48,7 @@ const authSlice = createSlice({
     /**
      * Update user profile
      */
-    setUser: (state, action: PayloadAction<any>) => {
+    setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
 
@@ -70,10 +66,10 @@ const authSlice = createSlice({
     ) => {
       const { access_token, token, refresh_token, refreshToken } = action.payload;
       if (access_token || token) {
-        state.token = access_token || token;
+        state.token = access_token ?? token ?? null;
       }
       if (refresh_token || refreshToken) {
-        state.refreshToken = refresh_token || refreshToken;
+        state.refreshToken = refresh_token ?? refreshToken ?? null;
       }
     },
 

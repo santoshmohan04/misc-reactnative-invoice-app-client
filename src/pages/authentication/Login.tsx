@@ -75,7 +75,11 @@ function Login() {
     navigation.navigate('SignUp');
   };
 
-  const displayError = authError || loginError?.data?.message || null;
+  const apiErrorMessage =
+    loginError && 'data' in loginError
+      ? ((loginError.data as { message?: string } | undefined)?.message ?? null)
+      : null;
+  const displayError = authError || apiErrorMessage || null;
 
   return (
     <KeyboardAvoidingView

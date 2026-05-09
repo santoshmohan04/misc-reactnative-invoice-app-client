@@ -3,11 +3,13 @@ import { API_ENDPOINTS } from '@shared-contracts';
 import { unwrapSuccessPayload } from '@shared-api';
 import { getApiUrl } from '@config/env';
 import type { RootState } from '../index';
+import { instrumentApiError, instrumentApiSuccess } from '../../shared/observability/apiInstrumentation';
+import { withLatencyMetric } from '../../shared/observability/performance';
 
 /**
  * Base query: adds authorization header from Redux auth state.
  */
-const baseQuery = fetchBaseQuery({
+const rawBaseQuery = fetchBaseQuery({
   baseUrl: getApiUrl(),
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
@@ -17,6 +19,13 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
+
+const baseQuery: typeof rawBaseQuery = async (args, api, extraOptions) => {
+  const operation = typeof args === 'string' ? args : args.url;
+  return withLatencyMetric(`data:${operation ?? 'request'}`, () =>
+    rawBaseQuery(args, api, extraOptions),
+  );
+};
 
 /**
  * Data API – CRUD for invoices, customers, and items.
@@ -47,6 +56,37 @@ export const dataApi = createApi({
         body,
       }),
       transformResponse: (response: any) => unwrapSuccessPayload(response),
+      // Optimistic update: patch the getInvoices cache to avoid full refetch.
+      // If the mutation fails, the patch will be undone automatically.
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          // Use RTK Query internal util to update cached getInvoices result
+          (dataApi as any).util.updateQueryData('getInvoices', undefined, (draft: any[]) => {
+            try {
+              const payload = arg;
+              if (!payload._id) {
+                // create optimistic entry with temporary id
+                draft.unshift({ ...payload, _id: `temp-${Date.now()}` });
+              } else {
+                const idx = draft.findIndex((d) => d._id === payload._id);
+                if (idx >= 0) draft[idx] = { ...draft[idx], ...payload };
+                else draft.unshift(payload);
+              }
+            } catch (e) {
+              // noop
+            }
+          }),
+        );
+        try {
+          await queryFulfilled;
+          instrumentApiSuccess('upsert_invoice');
+        } catch (err) {
+          patchResult.undo();
+          instrumentApiError('upsert_invoice', err, {
+            hasOptimisticUpdate: true,
+          });
+        }
+      },
       invalidatesTags: [{ type: 'Invoice', id: 'LIST' }],
     }),
 
@@ -79,6 +119,14 @@ export const dataApi = createApi({
         body,
       }),
       transformResponse: (response: any) => unwrapSuccessPayload(response),
+      async onQueryStarted(_, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          instrumentApiSuccess('upsert_customer');
+        } catch (error) {
+          instrumentApiError('upsert_customer', error);
+        }
+      },
       invalidatesTags: [{ type: 'Customer', id: 'LIST' }],
     }),
 
@@ -101,6 +149,14 @@ export const dataApi = createApi({
         body,
       }),
       transformResponse: (response: any) => unwrapSuccessPayload(response),
+      async onQueryStarted(_, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          instrumentApiSuccess('upsert_item');
+        } catch (error) {
+          instrumentApiError('upsert_item', error);
+        }
+      },
       invalidatesTags: [{ type: 'Item', id: 'LIST' }],
     }),
   }),

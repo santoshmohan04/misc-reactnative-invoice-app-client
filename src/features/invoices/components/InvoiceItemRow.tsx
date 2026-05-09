@@ -1,10 +1,9 @@
 import React, { memo } from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
-import { Controller, Control } from 'react-hook-form';
-import type { InvoiceItem } from '../../../types/schemas/invoice.schema';
+import { Controller } from 'react-hook-form';
 
 type Props = {
-  control: Control<any>;
+  control: any;
   index: number;
   name: string; // e.g. `items`
   onRemove?: () => void;

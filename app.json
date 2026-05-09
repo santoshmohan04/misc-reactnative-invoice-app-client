@@ -4,10 +4,10 @@
     "slug": "invoice-app-client",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/assets/images/react-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/assets/images/react-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#1c313a"
     },
@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/assets/images/react-logo.png",
         "backgroundColor": "#1c313a"
       },
       "package": "com.invoiceapp.client"
@@ -30,6 +30,6 @@
         "projectId": "your-eas-project-id"
       }
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": ["expo-secure-store", "@sentry/react-native/expo"]
   }
 }

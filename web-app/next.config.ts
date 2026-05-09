@@ -1,15 +1,24 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
-  transpilePackages: [
-    '@invoice-app/api-contracts',
-    '@invoice-app/shared-api',
-    '@invoice-app/shared-utils',
-    '@invoice-app/shared-ui',
-  ],
   experimental: {
     externalDir: true,
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+  sourcemaps: {
+    disable: process.env.NODE_ENV !== 'production',
+    filesToDeleteAfterUpload: ['.next/**/*.map'],
+  },
+});

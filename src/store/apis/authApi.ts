@@ -4,6 +4,8 @@ import { RefreshMutex, extractAccessToken, unwrapSuccessPayload } from '@shared-
 import { getApiUrl } from '@config/env';
 import { setCredentials, updateTokens, logout } from '../slices/authSlice';
 import type { RootState } from '../index';
+import { instrumentApiError, instrumentApiSuccess } from '../../shared/observability/apiInstrumentation';
+import { withLatencyMetric } from '../../shared/observability/performance';
 
 // Single shared mutex prevents concurrent token refresh calls
 const refreshMutex = new RefreshMutex();
@@ -26,20 +28,24 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   }
 
   const baseQuery = fetchBaseQuery({ baseUrl: getApiUrl() });
-  let result = await baseQuery(args, api, extraOptions);
+  let result = await withLatencyMetric(`auth:${typeof args.url === 'string' ? args.url : 'request'}`, () =>
+    baseQuery(args, api, extraOptions),
+  );
 
   if (result.error && (result.error as any).status === 401) {
     // Use mutex to prevent concurrent refresh races
     const newTokens = await refreshMutex.run(async () => {
       const refreshState = api.getState() as RootState;
-      const refreshResult = await baseQuery(
-        {
-          url: API_ENDPOINTS.user.refreshPrimary,
-          method: 'POST',
-          body: { refresh_token: refreshState.auth.refreshToken },
-        },
-        api,
-        extraOptions,
+      const refreshResult = await withLatencyMetric('auth:refresh_token', () =>
+        baseQuery(
+          {
+            url: API_ENDPOINTS.user.refreshPrimary,
+            method: 'POST',
+            body: { refresh_token: refreshState.auth.refreshToken },
+          },
+          api,
+          extraOptions,
+        ),
       );
 
       if (refreshResult.data) {
@@ -54,17 +60,21 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
               refresh_token: newRefreshToken,
             }),
           );
+          instrumentApiSuccess('auth_refresh_success');
           return { token: newAccessToken, refreshToken: newRefreshToken };
         }
       }
 
+      instrumentApiError('auth_refresh_failure', refreshResult.error ?? new Error('Token refresh failed'));
       api.dispatch(logout());
       return null;
     });
 
     if (newTokens?.token) {
       args.headers.authorization = `Bearer ${newTokens.token}`;
-      result = await baseQuery(args, api, extraOptions);
+      result = await withLatencyMetric(`auth:retry:${typeof args.url === 'string' ? args.url : 'request'}`, () =>
+        baseQuery(args, api, extraOptions),
+      );
     }
   }
 
@@ -90,12 +100,13 @@ export const authApi = createApi({
           dispatch(
             setCredentials({
               user: (payload as any)?.user,
-              access_token: accessToken,
-              refresh_token: (payload as any)?.refreshToken ?? null,
+              access_token: accessToken ?? undefined,
+              refresh_token: (payload as any)?.refreshToken ?? undefined,
             }),
           );
+          instrumentApiSuccess('login');
         } catch (error) {
-          console.error('Login error:', error);
+          instrumentApiError('login', error);
         }
       },
     }),
@@ -114,12 +125,13 @@ export const authApi = createApi({
           dispatch(
             setCredentials({
               user: (payload as any)?.user,
-              access_token: accessToken,
-              refresh_token: (payload as any)?.refreshToken ?? null,
+              access_token: accessToken ?? undefined,
+              refresh_token: (payload as any)?.refreshToken ?? undefined,
             }),
           );
+          instrumentApiSuccess('register');
         } catch (error) {
-          console.error('Register error:', error);
+          instrumentApiError('register', error);
         }
       },
     }),
@@ -147,8 +159,10 @@ export const authApi = createApi({
         try {
           await queryFulfilled;
           dispatch(logout());
+          instrumentApiSuccess('logout');
         } catch {
           dispatch(logout());
+          instrumentApiError('logout', new Error('Logout request failed'));
         }
       },
     }),
