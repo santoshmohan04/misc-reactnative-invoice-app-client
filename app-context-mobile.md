@@ -1,8 +1,7 @@
 # App Context – InvoiceAppClient (React Native Mobile)
 
 ## Overview
-
-InvoiceAppClient is a cross-platform (iOS & Android) React Native mobile application that allows business users to manage invoices, customers, and billable items. Users can create and send invoices by email via a connected backend server, and manage their company profile.
+InvoiceAppClient is a cross-platform (iOS & Android) mobile application built with the **Expo SDK (Managed/Prebuild workflow)**. It allows business users to manage invoices, customers, and billable items. Users can create and send invoices by email via a connected backend server, and manage their company profile.
 
 ---
 
@@ -18,7 +17,7 @@ InvoiceAppClient is a cross-platform (iOS & Android) React Native mobile applica
 | Customer Management | Create and edit customers with contact details and multiple addresses |
 | Item (Product) Management | Create and edit billable items with name, unit price, and description |
 | Currency Support | Multi-currency support; base currency set per user profile |
-| Offline Session Persistence | Auth token and user data persisted locally via AsyncStorage and redux-persist |
+| Offline Session Persistence | Auth token persisted via **Expo SecureStore**; other data via **AsyncStorage** and **redux-persist** |
 | Splash / Data Preload | On login, all invoices, customers, and items are preloaded before the main UI is shown |
 
 ---
@@ -31,6 +30,7 @@ InvoiceAppClient is a cross-platform (iOS & Android) React Native mobile applica
 - **Forms:** Built with `redux-form` `Field` and `FieldArray` components, using custom renderers for text inputs, select dropdowns, and date pickers
 - **Loading indicator (`Loader`):** Overlay spinner displayed during async API calls
 - **Empty state (`EmptyListPlaceHolder`):** Shown when a list has no data
+- **Language:** Core pages have been migrated to **TypeScript** (`.tsx`) for improved type safety.
 - **FAB (Floating Action Button):** Blue `+` button on list pages to add new records
 - **Status bar:** Dark background (`#1c313a`) with light-content style
 
@@ -51,9 +51,11 @@ InvoiceAppClient is a cross-platform (iOS & Android) React Native mobile applica
 
 Base URL is configured in `src/service/api.js`:
 
+```javascript
+import Constants from 'expo-constants';
+const BASE_URL = Constants.expoConfig?.extra?.baseUrl || 'http://localhost:3333';
 ```
-const BASE_URL = 'http://192.168.1.2:3333';   // change to your server IP
-```
+Configured in `app.json` under `expo.extra.baseUrl`.
 
 All requests include a `5000 ms` timeout. Authenticated requests send the token in the `x-auth` header.
 
@@ -81,14 +83,16 @@ The app uses **Redux** with **redux-thunk** middleware for async actions, **redu
 
 ### Store configuration (`src/config/store.js`)
 
-- Persist whitelist: `authReducer`, `userReducer` (auth token and user details survive app restarts)
+- **Persistence Strategy:**
+  - `authReducer`: Persisted using a custom **SecureStore** engine for sensitive auth tokens.
+  - Other reducers: Persisted via **AsyncStorage**.
 - All other slices (invoices, customers, items, form state) are loaded fresh on each session
 
 ### Reducer tree
 
 | Slice | Sub-reducers | Persisted |
 |---|---|---|
-| `authReducer` | `authData` (token, isLoggedIn), `registerUser`, `loginUser` | ✅ |
+| `authReducer` | `authData` (token, isLoggedIn), `registerUser`, `loginUser` | ✅ (Secure) |
 | `userReducer` | `getUser` (userDetails), `editUser` | ✅ |
 | `invoiceReducer` | `getInvoices`, `editInvoice`, `sendInvoiceEmail` | ❌ |
 | `customerReducer` | `getCustomers`, `editCustomer` | ❌ |
@@ -114,11 +118,11 @@ Each action dispatches `_LOADING`, `_SUCCESS`, and `_FAIL` action types to drive
 |---|---|---|---|
 | Login | `src/pages/authentication/Login.js` | `login` | Email + password login form |
 | Sign Up | `src/pages/authentication/SignUp.js` | `signup` | New user registration form |
-| Splash | `src/pages/Splash.js` | `splash` | Preloads data; redirects to Home on success |
+| Splash | `src/pages/Splash.tsx` | `splash` | Preloads data via `expo-splash-screen`; redirects to Home on success |
 | Invoices (list) | `src/pages/main/Invoices.js` | `invoices` | Tab 1 — lists all invoices |
 | Customers (list) | `src/pages/main/Customers.js` | `customers` | Tab 2 — lists all customers |
 | Items (list) | `src/pages/main/Items.js` | `items` | Tab 3 — lists all billable items |
-| Invoice Form | `src/pages/form-pages/InvoiceForm.js` | `invoiceForm` | Add/edit invoice; compute total; send by email |
+| Invoice Form | `src/pages/form-pages/InvoiceForm.tsx` | `invoiceForm` | Add/edit invoice; compute total; send by email |
 | Customer Form | `src/pages/form-pages/CustomerForm.js` | `customerForm` | Add/edit customer |
 | Item Form | `src/pages/form-pages/ItemForm.js` | `itemForm` | Add/edit item |
 | Profile | `src/pages/Profile.js` | `profile` | Edit user profile; logout |
@@ -141,7 +145,10 @@ The initial stack is determined by `isLoggedIn` from the persisted `authReducer`
 | Package | Version | Purpose |
 |---|---|---|
 | `react` | 18.2.0 | Core React library |
-| `react-native` | 0.74.6 | React Native runtime |
+| `expo` | latest | Expo SDK |
+| `expo-secure-store` | latest | Secure storage for auth tokens |
+| `expo-constants` | latest | Environment variable access |
+| `expo-splash-screen` | latest | Native splash screen handling |
 | `react-redux` | ^7.2.0 | Connect React components to Redux store |
 | `redux` | ^4.0.5 | State management |
 | `redux-thunk` | ^2.3.0 | Async action middleware |
@@ -163,10 +170,7 @@ The initial stack is determined by `isLoggedIn` from the persisted `authReducer`
 
 | Package | Version | Purpose |
 |---|---|---|
-| `@react-native-community/cli` | latest | React Native CLI tooling |
-| `@react-native/babel-preset` | 0.74.89 | Babel preset for React Native |
-| `@react-native/eslint-config` | 0.74.89 | ESLint config for React Native |
-| `@react-native/metro-config` | 0.74.89 | Metro bundler config |
+| `eas-cli` | latest | EAS Build and Submit CLI |
 | `eslint` | ^8.57.0 | Linting |
 | `prettier` | 2.8.8 | Code formatting |
 | `jest` | ^29.7.0 | Unit testing |
