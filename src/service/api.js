@@ -1,9 +1,11 @@
+import Constants from 'expo-constants';
+
 /**
  * @todo
  * Change this url based on server ip address
  * @type {string}
  */
-const BASE_URL = 'http://192.168.1.2:3333';
+const BASE_URL = Constants.expoConfig?.extra?.baseUrl || 'http://localhost:3333';
 
 /**
  * Basic API function that handles sending all application requests
@@ -102,5 +104,3 @@ export const fetchApi = async (url,
         throw error;
     }
 };
-
-

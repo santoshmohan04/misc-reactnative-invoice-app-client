@@ -36,10 +36,21 @@ import {getCurrency} from '../../utils/currencies.utils';
 import InnerPageHeader from '../../components/InnerPageHeader';
 import Constants from 'expo-constants';
 
+interface Props {
+    dispatch: any;
+    handleSubmit: any;
+    editInvoice: any;
+    getItems: any;
+    getCustomers: any;
+    subtotalValue: string;
+    change: any;
+    getUser: { userDetails: any };
+}
+
 /**
  * Form component for adding editing, or sending an invoice.
  */
-class InvoiceForm extends Component {
+class InvoiceForm extends Component<Props> {
 
     /**
      * Dispatches an action to edit or add invoice
@@ -59,7 +70,7 @@ class InvoiceForm extends Component {
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
-            newError.showAlert();
+            (newError as any).showAlert();
         }
     };
 
@@ -84,7 +95,7 @@ class InvoiceForm extends Component {
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
-            newError.showAlert();
+            (newError as any).showAlert();
         }
     };
 
@@ -121,7 +132,7 @@ class InvoiceForm extends Component {
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
-            newError.showAlert();
+            (newError as any).showAlert();
         }
     };
 
@@ -269,10 +280,10 @@ class InvoiceForm extends Component {
      *
      * @param values
      */
-    calculateSubTotal = (values) => {
+    calculateSubTotal = (values: any) => {
         if (values.items) {
-            let allItemsSubtotal = values.items.reduce(function (a, b) {
-                return a + Number(b.subtotal);
+            let allItemsSubtotal = values.items.reduce(function (a: number, b: any) {
+                return a + Number(b.subtotal || 0);
             }, 0);
             values.subtotal = String(allItemsSubtotal);
             values.total = String(allItemsSubtotal - Number(values.discount));
@@ -293,8 +304,8 @@ const selector = formValueSelector('invoiceForm');
  * @param props
  * @returns {{initialValues: *, editInvoice: editInvoice, getInvoices: getInvoices, getItems: getItems, getCustomers: getCustomers, getUser: getUser, subtotalValue: *}}
  */
-const mapStateToProps = (state, props) => {
-    let initialValues, subtotalValue = selector(state, 'subtotal');
+const mapStateToProps = (state: any, props: any) => {
+    let initialValues, subtotalValue = selector(state, 'subtotal') as string;
     if (props.invoice) {
         props.invoice.items.forEach((item) => {
             item.quantity = String(item.quantity);
@@ -332,11 +343,11 @@ const mapStateToProps = (state, props) => {
     });
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch: any) => {
     return bindActionCreators({change}, dispatch);
 };
 
-const validate = (values) => ({
+const validate = (values: any) => ({
     due: validatePositiveTimeDifference(values.issued, values.due),
 });
 
