@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../../utils/NavigationService';
 import {Button, Card, CardItem, Container, Footer, FooterTab, Text, Toast} from 'native-base';
 import {ScrollView} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
@@ -137,11 +137,12 @@ class ItemForm extends Component<{}> {
  */
 const mapStateToProps = (state, props) => {
     let initialValues;
-    if (props.item) {
+    const item = props.route?.params?.item || props.item;
+    if (item) {
         initialValues = {
-            name: props.item.name,
-            price: props.item.price.toString(),
-            description: props.item.description,
+            name: item.name,
+            price: item.price.toString(),
+            description: item.description,
         };
     }
     return ({

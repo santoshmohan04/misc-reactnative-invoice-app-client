@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {Body, Button, Header, Icon, Left, Right, Title} from 'native-base';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../utils/NavigationService';
 
 /**
  * Header component with back button for all level 2 pages

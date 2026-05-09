@@ -26,7 +26,7 @@ InvoiceAppClient is a cross-platform (iOS & Android) React Native mobile applica
 ## UI
 
 - **Component library:** [NativeBase v2](https://docs.nativebase.io/) — provides `Container`, `Card`, `CardItem`, `Button`, `Text`, `Icon`, `List`, `Fab`, `Toast`, `Footer`, `FooterTab`, `Input`, and modal components
-- **Navigation:** `react-native-router-flux` — scene-based stack/tab navigation
+- **Navigation:** `@react-navigation/native` — stack and bottom tab navigation
 - **Bottom Tab Bar (`NavBar`):** Three tabs: Invoices, Customers, Items
 - **Forms:** Built with `redux-form` `Field` and `FieldArray` components, using custom renderers for text inputs, select dropdowns, and date pickers
 - **Loading indicator (`Loader`):** Overlay spinner displayed during async API calls
@@ -125,12 +125,12 @@ Each action dispatches `_LOADING`, `_SUCCESS`, and `_FAIL` action types to drive
 
 ### Routing
 
-Routing is handled by `react-native-router-flux` in `src/components/Routes.js`:
+Routing is handled by `@react-navigation/native` in `src/components/Routes.js`:
 
-- **Unauthenticated stack** (`root`): Login → SignUp
-- **Authenticated stack** (`app`): Splash → Home (tabs: Invoices / Customers / Items) → Invoice/Customer/Item forms → Profile
+- **Unauthenticated stack** (`AuthStack`): Login → SignUp
+- **Authenticated stack** (`AppStack`): Splash → Home (tabs: Invoices / Customers / Items) → Invoice/Customer/Item forms → Profile
 
-The initial scene is determined by `isLoggedIn` from the persisted `authReducer`.
+The initial stack is determined by `isLoggedIn` from the persisted `authReducer`.
 
 ---
 
@@ -148,12 +148,13 @@ The initial scene is determined by `isLoggedIn` from the persisted `authReducer`
 | `redux-form` | ^8.3.5 | Form state management integrated with Redux |
 | `redux-persist` | ^5.6.12 | Persist and rehydrate Redux store |
 | `@react-native-async-storage/async-storage` | ^1.24.0 | Key-value storage used by redux-persist |
-| `react-native-router-flux` | latest | Scene-based navigation |
-| `react-native-gesture-handler` | 2.16.2 | Required by react-native-router-flux |
-| `react-native-reanimated` | 3.10.1 | Required by react-native-router-flux |
-| `react-native-safe-area-context` | 4.10.1 | Safe area insets |
-| `react-native-screens` | 3.31.1 | Native screen containers |
-| `@react-native-masked-view/masked-view` | ^0.3.2 | Navigation header mask |
+| `@react-navigation/native` | ^7.2.4 | Navigation framework |
+| `@react-navigation/native-stack` | ^7.14.14 | Stack navigator |
+| `@react-navigation/bottom-tabs` | ^7.15.13 | Bottom tab navigator |
+| `react-native-gesture-handler` | 2.16.2 | Gesture handling for navigation |
+| `react-native-reanimated` | 3.10.1 | Animations for navigation |
+| `react-native-safe-area-context` | ^4.10.1 | Safe area insets |
+| `react-native-screens` | ^4.24.0 | Native screen containers |
 | `native-base` | ^2.13.12 | UI component library |
 | `moment` | ^2.25.3 | Date formatting on invoice list |
 | `prop-types` | ^15.7.2 | Runtime prop validation |

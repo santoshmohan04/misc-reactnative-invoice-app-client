@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {Field, reduxForm} from 'redux-form';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../../utils/NavigationService';
 import {registerNewUser} from '../../actions/auth.actions';
 import Loader from '../../components/Loader';
 import {ErrorUtils} from '../../utils/error.utils';

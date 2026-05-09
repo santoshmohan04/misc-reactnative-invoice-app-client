@@ -164,16 +164,17 @@ class CustomerForm extends Component<{}> {
  */
 const mapStateToProps = (state, props) => {
     let initialValues;
-    if (props.customer) {
+    const customer = props.route?.params?.customer || props.customer;
+    if (customer) {
         initialValues = {
-            name: props.customer.name,
-            company: props.customer.company,
-            email: props.customer.email,
-            phone: props.customer.phone,
-            mobile: props.customer.mobile,
-            address_1: props.customer.addresses && (props.customer.addresses)[0],
-            address_2: props.customer.addresses && (props.customer.addresses)[1],
-            address_3: props.customer.addresses && (props.customer.addresses)[2],
+            name: customer.name,
+            company: customer.company,
+            email: customer.email,
+            phone: customer.phone,
+            mobile: customer.mobile,
+            address_1: customer.addresses && (customer.addresses)[0],
+            address_2: customer.addresses && (customer.addresses)[1],
+            address_3: customer.addresses && (customer.addresses)[2],
         };
     }
     return ({

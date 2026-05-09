@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {Body, Button, Card, CardItem, Container, Text} from 'native-base';
 import {ScrollView} from 'react-native';
 
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../../utils/NavigationService';
 import Logo from '../../components/Logo';
 import {Field, reduxForm} from 'redux-form';
 import {compose} from 'redux';

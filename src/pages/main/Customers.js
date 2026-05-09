@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../../utils/NavigationService';
 import {Container, Fab, Icon, List, View} from 'native-base';
 import ListView from '../../components/ListView';
 import {connect} from 'react-redux';

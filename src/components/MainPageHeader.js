@@ -3,7 +3,7 @@ import {Body, Button, Header, Icon, Left, Right, Title, Toast} from 'native-base
 import {getInvoicesList} from '../actions/invoice.actions';
 import {getCustomersList} from '../actions/customer.actions';
 import {getItemsList} from '../actions/item.actions';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../utils/NavigationService';
 import {ErrorUtils} from '../utils/error.utils';
 import {connect} from 'react-redux';
 import {getUser} from '../actions/auth.actions';

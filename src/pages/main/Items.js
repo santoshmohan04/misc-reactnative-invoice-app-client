@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {View} from 'react-native';
 import {Container, Fab, Icon, List} from 'native-base';
 import ListView from '../../components/ListView';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../../utils/NavigationService';
 import Loader from '../../components/Loader';
 import {connect} from 'react-redux';
 import Logo from '../../components/Logo';

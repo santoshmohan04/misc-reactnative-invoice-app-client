@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Card, CardItem, Container} from 'native-base';
 import {ScrollView} from 'react-native';
-import {Actions} from 'react-native-router-flux';
+import {Actions} from '../utils/NavigationService';
 import Logo from '../components/Logo';
 import {BackHandler} from 'react-native';
 import {connect} from 'react-redux';

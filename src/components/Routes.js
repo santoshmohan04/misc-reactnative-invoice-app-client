@@ -1,19 +1,13 @@
-import React, {Component} from 'react';
-import * as RNRF from 'react-native-router-flux';
-import {
-    CustomerForm,
-    Customers,
-    InvoiceForm,
-    Invoices,
-    ItemForm,
-    Items,
-    Login,
-    Profile,
-    SignUp,
-    Splash,
-} from '../pages/index';
-import {connect} from 'react-redux';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { navigationRef } from '../utils/NavigationService';
 import NavBar from './NavBar';
+import {
+    CustomerForm, Customers, InvoiceForm, Invoices, ItemForm, Items,
+    Login, Profile, SignUp, Splash,
+} from '../pages/index';
 
 // Fallback for native-base if it fails to load
 let Root;
@@ -26,54 +20,49 @@ try {
     Root = ({children}) => children;
 }
 
-const Router = RNRF.Router || (RNRF.default && RNRF.default.Router);
-const Scene = RNRF.Scene || (RNRF.default && RNRF.default.Scene);
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
-/**
- * React-native-router-flux router component.
- */
-class Routes extends Component<{}> {
-
-    render() {
-        console.log('Routes render - Router exists:', !!Router);
-
-        if (!Router || !Scene) {
-            const {View, Text} = require('react-native');
-            return (
-                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                    <Text>Router not found!</Text>
-                </View>
-            );
-        }
-
-        const RouterWithRedux = connect()(Router);
-
-        return (
-            <Root>
-                <RouterWithRedux>
-                    <Scene>
-                        <Scene key={'root'} hideNavBar={true} initial={!this.props.isLoggedIn}>
-                            <Scene key="login" component={Login} title="Login" initial={true}/>
-                            <Scene key="signup" component={SignUp} title="Sign Up"/>
-                        </Scene>
-                        <Scene key={'app'} hideNavBar={true} initial={this.props.isLoggedIn}>
-                            <Scene key="splash" title="Splash" initial={this.props.isLoggedIn} component={Splash}/>
-                            <Scene key="home" title="Home" tabs
-                                   tabBarComponent={NavBar}>
-                                <Scene key="invoices" component={Invoices} title="Invoices" hideNavBar initial/>
-                                <Scene key="customers" component={Customers} title="Customers" hideNavBar/>
-                                <Scene key="items" component={Items} title="Items" hideNavBar/>
-                            </Scene>
-                            <Scene key="customerForm" component={CustomerForm} title="Customer" hideNavBar/>
-                            <Scene key="itemForm" component={ItemForm} title="Item" hideNavBar/>
-                            <Scene key="invoiceForm" component={InvoiceForm} title="Invoice" hideNavBar/>
-                            <Scene key="profile" component={Profile} title="Profile" hideNavBar/>
-                        </Scene>
-                    </Scene>
-                </RouterWithRedux>
-            </Root>
-        );
-    }
+function HomeTabs() {
+  return (
+    <Tab.Navigator tabBar={props => <NavBar {...props} />} screenOptions={{ headerShown: false }}>
+      <Tab.Screen name="invoices" component={Invoices} />
+      <Tab.Screen name="customers" component={Customers} />
+      <Tab.Screen name="items" component={Items} />
+    </Tab.Navigator>
+  );
 }
+
+function AppStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="splash" component={Splash} />
+      <Stack.Screen name="home" component={HomeTabs} />
+      <Stack.Screen name="customerForm" component={CustomerForm} />
+      <Stack.Screen name="itemForm" component={ItemForm} />
+      <Stack.Screen name="invoiceForm" component={InvoiceForm} />
+      <Stack.Screen name="profile" component={Profile} />
+    </Stack.Navigator>
+  );
+}
+
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="login" component={Login} />
+      <Stack.Screen name="signup" component={SignUp} />
+    </Stack.Navigator>
+  );
+}
+
+const Routes = ({ isLoggedIn }) => {
+  return (
+    <Root>
+      <NavigationContainer ref={navigationRef}>
+        {isLoggedIn ? <AppStack /> : <AuthStack />}
+      </NavigationContainer>
+    </Root>
+  );
+};
 
 export default Routes;

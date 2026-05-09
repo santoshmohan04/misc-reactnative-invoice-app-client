@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {Button, Footer, FooterTab, Icon, Text} from 'native-base';
-import {Actions} from 'react-native-router-flux';
 
 /**
  * Navigation bar component for main app landing page.
@@ -20,32 +19,32 @@ class NavBar extends Component<{}> {
     }
 
     render() {
+        const { state, navigation } = this.props;
+        const currentIndex = state.index;
+
         return (
             <Footer>
                 <FooterTab>
                     <Button vertical
-                            active={this.state.scene === 1}
+                            active={currentIndex === 0}
                             onPress={() => {
-                                Actions.invoices();
-                                this.setState({scene: 1});
+                                navigation.navigate('invoices');
                             }}>
                         <Icon name="file-invoice-dollar" type={'FontAwesome5'}/>
                         <Text>Invoice</Text>
                     </Button>
                     <Button vertical
-                            active={this.state.scene === 2}
+                            active={currentIndex === 1}
                             onPress={() => {
-                                Actions.customers();
-                                this.setState({scene: 2});
+                                navigation.navigate('customers');
                             }}>
                         <Icon name="ios-people"/>
                         <Text>Customers</Text>
                     </Button>
                     <Button vertical
-                            active={this.state.scene === 3}
+                            active={currentIndex === 2}
                             onPress={() => {
-                                Actions.items();
-                                this.setState({scene: 3});
+                                navigation.navigate('items');
                             }}>
                         <Icon active name="ios-barcode"/>
                         <Text>Items</Text>
