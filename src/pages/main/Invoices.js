@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Actions} from '../../utils/NavigationService';
-import {Container, Fab, Icon, List, View} from 'native-base';
+import {FlatList, StyleSheet, View} from 'react-native';
+import {Button, Text} from 'tamagui';
 import {connect} from 'react-redux';
 import ListView from '../../components/ListView';
 import EmptyListPlaceHolder from '../../components/EmptyListPlaceHolder';
@@ -21,23 +22,23 @@ class Invoices extends Component<{}> {
         const currency = getCurrency(userDetails.base_currency);
 
         return (
-            <Container>
+            <View style={styles.container}>
                 {getInvoices.isLoading && <Loader/>}
                 <PageHeader title={'Invoices'}/>
-                <View style={{flex: 1}}>
+                <View style={styles.content}>
                     {this.renderInvoicesList(getInvoices.invoicesList || [],
                         getCustomers.customersList || [],
                         currency)}
-                    <Fab
-                        style={{backgroundColor: '#5067FF'}}
-                        position="bottomRight"
+                    <Button
+                        circular
+                        style={styles.fab}
                         onPress={() => {
                             this.addNewInvoice();
                         }}>
-                        <Icon name="add"/>
-                    </Fab>
+                        <Text style={styles.fabText}>+</Text>
+                    </Button>
                 </View>
-            </Container>
+            </View>
         );
     };
 
@@ -71,30 +72,54 @@ class Invoices extends Component<{}> {
      */
     renderInvoicesList(invoicesList, customersList, currency) {
         return (
-            <List
+            <FlatList
                 ListEmptyComponent={
                     <EmptyListPlaceHolder
                         type={'item'}
                         message={'No invoices found.\nPress the plus button to add new items.'}/>}
-                dataArray={invoicesList}
-                renderRow={
-                    (invoice) =>
-                        <ListView
-                            title={(customersList.find(e => e._id === invoice.customer) || {}).name}
-                            subtitle={invoice.number}
-                            right={formatCurrency(invoice.total, currency)}
-                            rightSub={moment(invoice.issued).format('DD/MM/YYYY')}
-                            handleClickEvent={
-                                () => {
-                                    this.editInvoice(invoice);
-                                }
-                            }/>
-                }
-                keyExtractor={(item, index) => index.toString()}>
-            </List>
+                data={invoicesList}
+                renderItem={({item: invoice}) => (
+                    <ListView
+                        title={(customersList.find(e => e._id === invoice.customer) || {}).name}
+                        subtitle={invoice.number}
+                        right={formatCurrency(invoice.total, currency)}
+                        rightSub={moment(invoice.issued).format('DD/MM/YYYY')}
+                        handleClickEvent={() => {
+                            this.editInvoice(invoice);
+                        }}
+                    />
+                )}
+                keyExtractor={(item, index) => item._id || index.toString()}
+            />
         );
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    },
+    fab: {
+        position: 'absolute',
+        right: 16,
+        bottom: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5067FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    fabText: {
+        color: '#ffffff',
+        fontSize: 28,
+        lineHeight: 28,
+        marginTop: -2,
+    },
+});
 
 /**
  * map props to invoices reducer to get invoices list

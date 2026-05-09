@@ -29,6 +29,6 @@
         "projectId": "your-eas-project-id"
       }
     },
-    "plugins": ["expo-secure-store", "react-native-reanimated"]
+    "plugins": ["expo-secure-store"]
   }
 }

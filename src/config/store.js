@@ -1,9 +1,9 @@
 import {applyMiddleware, createStore, combineReducers} from 'redux';
 import {persistReducer, persistStore, persistCombineReducers} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import thunk from 'redux-thunk';
+import {thunk} from 'redux-thunk';
 import secureStorage from './secureStorage';
-import reducers from '../reducers';
+import { reducers } from '../reducers';
 
 /**
  * Split persistence configuration:

@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
-import {Body, Button, Header, Icon, Left, Right, Title, Toast} from 'native-base';
+import {Alert, StyleSheet} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {Button, Text, XStack} from 'tamagui';
 import {getInvoicesList} from '../actions/invoice.actions';
 import {getCustomersList} from '../actions/customer.actions';
 import {getItemsList} from '../actions/item.actions';
@@ -26,11 +28,7 @@ class MainPageHeader extends Component<{}> {
             await this.props.dispatch(getItemsList())])
             .then((responses) => {
                 if (responses[0].success && responses[1].success && responses[2].success) {
-                    Toast.show({
-                        text: 'Data was successfully updated.',
-                        buttonText: 'Okay',
-                        type: 'success',
-                    });
+                    Alert.alert('Success', 'Data was successfully updated.');
                 } else {
                     throw 'Something went wrong. Check connection or try again later.';
                 }
@@ -42,28 +40,39 @@ class MainPageHeader extends Component<{}> {
 
     render() {
         return (
-            <Header>
-                <Left>
-                    <Button transparent light onPress={() => {
+            <XStack style={styles.header}>
+                <Button chromeless onPress={() => {
                         Actions.profile();
                     }}>
-                        <Icon name='ios-person'/>
-                    </Button>
-                </Left>
-                <Body>
-                    <Title>{this.props.title}</Title>
-                </Body>
-                <Right>
-                    <Button transparent light onPress={() => {
+                    <Ionicons name='person-outline' size={22} color='#0f172a'/>
+                </Button>
+                <Text style={styles.title}>{this.props.title}</Text>
+                <Button chromeless onPress={() => {
                         this.refreshData();
                     }}>
-                        <Icon name='ios-refresh'/>
-                    </Button>
-                </Right>
-            </Header>
+                    <Ionicons name='refresh' size={22} color='#0f172a'/>
+                </Button>
+            </XStack>
         );
     };
 }
+
+const styles = StyleSheet.create({
+    header: {
+        height: 56,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: '#ffffff',
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#0f172a',
+    },
+});
 
 const mapDispatchToProps = (dispatch) => ({
     dispatch,

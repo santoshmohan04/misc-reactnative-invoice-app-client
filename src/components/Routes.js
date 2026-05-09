@@ -9,17 +9,6 @@ import {
     Login, Profile, SignUp, Splash,
 } from '../pages/index';
 
-// Fallback for native-base if it fails to load
-let Root;
-try {
-    const NB = require('native-base');
-    Root = NB.Root;
-    console.log('native-base Root loaded');
-} catch (e) {
-    console.error('Failed to load native-base:', e);
-    Root = ({children}) => children;
-}
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -57,11 +46,9 @@ function AuthStack() {
 
 const Routes = ({ isLoggedIn }) => {
   return (
-    <Root>
-      <NavigationContainer ref={navigationRef}>
-        {isLoggedIn ? <AppStack /> : <AuthStack />}
-      </NavigationContainer>
-    </Root>
+    <NavigationContainer ref={navigationRef}>
+      {isLoggedIn ? <AppStack /> : <AuthStack />}
+    </NavigationContainer>
   );
 };
 

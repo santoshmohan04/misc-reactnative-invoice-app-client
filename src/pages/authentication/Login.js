@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {Body, Button, Card, CardItem, Container, Text} from 'native-base';
-import {ScrollView} from 'react-native';
+import {Button, Text} from 'tamagui';
+import {ScrollView, StyleSheet, View} from 'react-native';
 
 import {Actions} from '../../utils/NavigationService';
 import Logo from '../../components/Logo';
@@ -54,49 +54,87 @@ class Login extends Component<{}> {
     render() {
         const {handleSubmit, loginUser} = this.props;
         return (
-            <Container>
+            <View style={styles.container}>
                 {loginUser.isLoading && <Loader/>}
-                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
                     <Logo/>
-                    <Card transparent>
-                        <CardItem>
-                            <Body>
+                    <View style={styles.card}>
+                        <View style={styles.cardItem}>
                                 <Field name={'email'}
                                        keyboardType={'email-address'}
                                        placeholder={'Email'}
                                        validate={[email, required]}
                                        component={renderTextInput}/>
-                            </Body>
-                        </CardItem>
-                        <CardItem>
-                            <Body>
+                        </View>
+                        <View style={styles.cardItem}>
                                 <Field name={'password'}
                                        keyboardType={'default'}
                                        placeholder={'Password'}
                                        secureTextEntry={true}
                                        validate={[required]}
                                        component={renderTextInput}/>
-                            </Body>
-                        </CardItem>
-                        <CardItem footer>
-                            <Body>
-                                <Button padder block primary onPress={handleSubmit(this.onSubmit)}>
-                                    <Text>Login</Text>
-                                </Button>
-                            </Body>
-                        </CardItem>
-                        <CardItem>
-                            <Text> Don't have an account yet?</Text>
-                            <Button transparent onPress={this.openSignUp}>
-                                <Text>Sign Up</Text>
+                        </View>
+
+                        <Button style={styles.primaryButton} onPress={handleSubmit(this.onSubmit)}>
+                            <Text style={styles.primaryButtonText}>Login</Text>
+                        </Button>
+
+                        <View style={styles.inlineRow}>
+                            <Text style={styles.inlineText}>Don&apos;t have an account yet?</Text>
+                            <Button chromeless onPress={() => this.openSignUp()}>
+                                <Text style={styles.linkText}>Sign Up</Text>
                             </Button>
-                        </CardItem>
-                    </Card>
+                        </View>
+                    </View>
                 </ScrollView>
-            </Container>
+            </View>
         );
     };
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 20,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        padding: 12,
+    },
+    cardItem: {
+        marginBottom: 4,
+    },
+    primaryButton: {
+        marginTop: 8,
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    primaryButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+    },
+    inlineRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    inlineText: {
+        color: '#334155',
+    },
+    linkText: {
+        color: '#2563eb',
+        fontWeight: '600',
+    },
+});
 
 /**
  * maps loginUser reducer to props

@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Actions} from '../../utils/NavigationService';
-import {Container, Fab, Icon, List, View} from 'native-base';
+import {FlatList, StyleSheet, View} from 'react-native';
+import {Button, Text} from 'tamagui';
 import ListView from '../../components/ListView';
 import {connect} from 'react-redux';
 import EmptyListPlaceHolder from '../../components/EmptyListPlaceHolder';
@@ -16,20 +17,20 @@ class Customers extends Component<{}> {
         const {getCustomers, getUser: {userDetails}} = this.props;
         const currency = getCurrency(userDetails.base_currency);
         return (
-            <Container>
+            <View style={styles.container}>
                 <PageHeader title={'Customers'}/>
-                <View style={{flex: 1}}>
+                <View style={styles.content}>
                     {this.renderCustomersList(getCustomers.customersList || [], currency)}
-                    <Fab
-                        style={{backgroundColor: '#5067FF'}}
-                        position="bottomRight"
+                    <Button
+                        circular
+                        style={styles.fab}
                         onPress={() => {
                             this.addNewCustomer();
                         }}>
-                        <Icon name="add"/>
-                    </Fab>
+                        <Text style={styles.fabText}>+</Text>
+                    </Button>
                 </View>
-            </Container>
+            </View>
         );
     };
 
@@ -59,28 +60,55 @@ class Customers extends Component<{}> {
      * @returns {*}
      */
     renderCustomersList(customersList, currency) {
-        return (<List
-            ListEmptyComponent={
-                <EmptyListPlaceHolder
-                    type={'item'}
-                    message={'No customers found.\nPress the plus button to add new customers.'}/>}
-            dataArray={customersList}
-            renderRow={
-                (customer) =>
+        return (
+            <FlatList
+                ListEmptyComponent={
+                    <EmptyListPlaceHolder
+                        type={'item'}
+                        message={'No customers found.\nPress the plus button to add new customers.'}/>
+                }
+                data={customersList}
+                renderItem={({item: customer}) => (
                     <ListView
                         title={customer.name}
                         subtitle={`${customer.number_invoices} invoices`}
                         right={formatCurrency(customer.total, currency)}
-                        handleClickEvent={
-                            () => {
-                                this.editCustomer(customer);
-                            }
-                        }/>
-            }
-            keyExtractor={(item, index) => index.toString()}>
-        </List>);
+                        handleClickEvent={() => {
+                            this.editCustomer(customer);
+                        }}
+                    />
+                )}
+                keyExtractor={(item, index) => item._id || index.toString()}
+            />
+        );
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    },
+    fab: {
+        position: 'absolute',
+        right: 16,
+        bottom: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5067FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    fabText: {
+        color: '#ffffff',
+        fontSize: 28,
+        lineHeight: 28,
+        marginTop: -2,
+    },
+});
 
 
 const mapStateToProps = (state) => ({

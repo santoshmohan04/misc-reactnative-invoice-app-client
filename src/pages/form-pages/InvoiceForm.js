@@ -1,20 +1,8 @@
 import React, { Component } from 'react';
 import {Actions} from '../../utils/NavigationService';
-import {
-    Body,
-    Button,
-    Card,
-    CardItem,
-    Container,
-    Fab,
-    Footer,
-    FooterTab,
-    Icon,
-    Left,
-    Text,
-    Toast,
-} from 'native-base';
-import {ScrollView, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {Button, Text} from 'tamagui';
+import {Alert, ScrollView, StyleSheet, TouchableOpacity, View} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import renderItemsTextInputArray from '../../components/reduxFormRenderers/RenderItemsInputArray';
 import {change, Field, FieldArray, formValueSelector, reduxForm} from 'redux-form';
@@ -75,11 +63,7 @@ class InvoiceForm extends Component {
             if (!response || !response.success) {
                 throw response;
             } else {
-                Toast.show({
-                    text: 'Invoices list successfully updated.',
-                    buttonText: 'Okay',
-                    type: 'success',
-                });
+                Alert.alert('Success', 'Invoices list successfully updated.');
                 return response;
             }
         } catch (e) {
@@ -111,11 +95,7 @@ class InvoiceForm extends Component {
                 if (!response || !response.success) {
                     throw response;
                 } else {
-                    Toast.show({
-                        text: 'Invoice was successfully send by email.',
-                        buttonText: 'Okay',
-                        type: 'success',
-                    });
+                    Alert.alert('Success', 'Invoice was successfully sent by email.');
                     return response;
                 }
             }
@@ -137,20 +117,20 @@ class InvoiceForm extends Component {
         const {handleSubmit, editInvoice, getItems, getCustomers, subtotalValue, change, getUser: {userDetails}} = this.props;
         const currency = getCurrency(userDetails.base_currency);
         return (
-            <Container>
+            <View style={styles.container}>
                 {editInvoice.isLoading && <Loader/>}
                 <InnerPageHeader title={'Invoice'}/>
-                <View style={{flex: 1}}>
-                    <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
-                        <Card style={{paddingHorizontal: 10}}>
-                            <CardItem cardBody>
+                <View style={styles.content}>
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <View style={styles.card}>
+                            <View style={styles.cardItem}>
                                 <Field name={'number'}
                                        keyboardType={'default'}
                                        placeholder={'INV0000'}
                                        validate={[required]}
                                        component={renderTextInput}/>
-                            </CardItem>
-                            <CardItem cardBody>
+                            </View>
+                            <View style={styles.cardItem}>
                                 <Field
                                     component={renderDatePicker}
                                     keyboardType='default'
@@ -159,10 +139,10 @@ class InvoiceForm extends Component {
                                     placeholder="YYYY/MM/DD"
                                     validate={[required]}
                                 />
-                            </CardItem>
-                        </Card>
-                        <Card style={{paddingHorizontal: 10}}>
-                            <CardItem cardBody>
+                            </View>
+                        </View>
+                        <View style={styles.card}>
+                            <View style={styles.cardItem}>
                                 <Field name={`customer`}
                                        component={renderSelectOption}
                                        iosHeader="Select Customer"
@@ -171,8 +151,8 @@ class InvoiceForm extends Component {
                                        label={'To: '}
                                        validate={[required]}
                                        placeholder={'Customer'}/>
-                            </CardItem>
-                            <CardItem cardBody>
+                            </View>
+                            <View style={styles.cardItem}>
                                 <Field
                                     component={renderDatePicker}
                                     keyboardType='default'
@@ -181,26 +161,22 @@ class InvoiceForm extends Component {
                                     placeholder="YYYY/MM/DD"
                                     validate={[required]}
                                 />
-                            </CardItem>
-                        </Card>
+                            </View>
+                        </View>
                         <FieldArray name="items"
                                     optionsArray={getItems.itemsList || []}
                                     change={change}
                                     currency={currency}
                                     component={renderItemsTextInputArray}
                         />
-                        <Card>
-                            <CardItem button light onPress={handleSubmit(this.calculateSubTotal)}>
-                                <Left>
-                                    <Icon active name="ios-calculator"/>
-                                    <Body>
-                                        <Text>Compute Total</Text>
-                                    </Body>
-                                </Left>
-                            </CardItem>
-                        </Card>
-                        <Card>
-                            <CardItem cardBody style={{backgroundColor: 'lightgray', paddingHorizontal: 10}}>
+                        <View style={styles.card}>
+                            <TouchableOpacity style={styles.computeRow} onPress={handleSubmit(this.calculateSubTotal)}>
+                                <Ionicons name="calculator-outline" size={20} color="#0f172a"/>
+                                <Text style={styles.computeText}>Compute Total</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.card}>
+                            <View style={[styles.cardItem, styles.grayRow]}>
                                 <Field name={'subtotal'}
                                        keyboardType={'numeric'}
                                        placeholder={'0'}
@@ -212,8 +188,8 @@ class InvoiceForm extends Component {
                                        normalize={value => (normalizeCurrency(value))}
                                        validate={[required, number]}
                                        component={renderTextInput}/>
-                            </CardItem>
-                            <CardItem cardBody style={{paddingHorizontal: 10}}>
+                            </View>
+                            <View style={styles.cardItem}>
                                 <Field name={'discount'}
                                        keyboardType={'numeric'}
                                        placeholder={'0'}
@@ -227,8 +203,8 @@ class InvoiceForm extends Component {
                                        normalize={value => (normalizeCurrency(value))}
                                        validate={[required, number]}
                                        component={renderTextInput}/>
-                            </CardItem>
-                            <CardItem cardBody style={{backgroundColor: 'lightgray', paddingHorizontal: 10}}>
+                            </View>
+                            <View style={[styles.cardItem, styles.grayRow]}>
                                 <Field name={'total'}
                                        keyboardType={'numeric'}
                                        placeholder={'0'}
@@ -239,25 +215,23 @@ class InvoiceForm extends Component {
                                        normalize={value => (normalizeCurrency(value))}
                                        validate={[required, number]}
                                        component={renderTextInput}/>
-                            </CardItem>
-                        </Card>
-                        <Card transparent><CardItem/><CardItem/></Card>
+                            </View>
+                        </View>
+                        <View style={styles.bottomSpacer}/>
                     </ScrollView>
-                    <Fab
-                        style={{backgroundColor: '#5067FF'}}
-                        position="bottomRight"
+                    <Button
+                        circular
+                        style={styles.fab}
                         onPress={handleSubmit(this.onSendInvoice)}>
-                        <Icon name="ios-send"/>
-                    </Fab>
+                        <Ionicons name="send" size={20} color="#ffffff"/>
+                    </Button>
                 </View>
-                <Footer>
-                    <FooterTab>
-                        <Button full onPress={handleSubmit(this.onSubmit)}>
-                            <Text>Save</Text>
-                        </Button>
-                    </FooterTab>
-                </Footer>
-            </Container>
+                <View style={styles.footer}>
+                    <Button style={styles.saveButton} onPress={handleSubmit(this.onSubmit)}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </Button>
+                </View>
+            </View>
         );
     };
 
@@ -279,6 +253,77 @@ class InvoiceForm extends Component {
         }
     };
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 12,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        overflow: 'hidden',
+    },
+    cardItem: {
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+    },
+    grayRow: {
+        backgroundColor: 'lightgray',
+    },
+    computeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 14,
+    },
+    computeText: {
+        marginLeft: 10,
+        color: '#0f172a',
+        fontWeight: '600',
+    },
+    fab: {
+        position: 'absolute',
+        right: 16,
+        bottom: 80,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5067FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    footer: {
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: '#ffffff',
+        padding: 10,
+    },
+    saveButton: {
+        width: '100%',
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    saveButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+    },
+    bottomSpacer: {
+        height: 72,
+    },
+});
 
 /**
  * Selects redux-form fields to get their values

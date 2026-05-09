@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import {Card, CardItem, Container} from 'native-base';
-import {ScrollView, BackHandler} from 'react-native';
+import {ScrollView, BackHandler, StyleSheet, View} from 'react-native';
 import {Actions} from '../utils/NavigationService';
 import Logo from '../components/Logo';
 import {connect} from 'react-redux';
@@ -46,18 +45,34 @@ class Splash extends Component {
 
     render() {
         return (
-            <Container>
-                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
-                    <Card transparent>
-                        <CardItem>
-                            <Logo/>
-                        </CardItem>
-                    </Card>
+            <View style={styles.container}>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.card}>
+                        <Logo/>
+                    </View>
                 </ScrollView>
-            </Container>
+            </View>
         );
     };
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        padding: 12,
+    },
+});
 
 /**
  * maps props to data reducers to get request statuses

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {Body, Button, Card, CardItem, Container, Text, Toast} from 'native-base';
-import {ScrollView} from 'react-native';
+import {Button, Text} from 'tamagui';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
 import {Field, reduxForm} from 'redux-form';
 import renderTextInput from '../components/reduxFormRenderers/RenderTextInput';
 import {phone, required} from '../utils/redux.form.utils';
@@ -50,11 +50,7 @@ class Profile extends Component<{}> {
             if (!response.success) {
                 throw response;
             } else {
-                Toast.show({
-                    text: 'Items list successfully updated.',
-                    buttonText: 'Okay',
-                    type: 'success',
-                });
+                Alert.alert('Success', 'Profile successfully updated.');
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
@@ -72,32 +68,32 @@ class Profile extends Component<{}> {
     render() {
         const {handleSubmit, editUser} = this.props;
         return (
-            <Container>
+            <View style={styles.container}>
                 {editUser.isLoading && <Loader/>}
                 <InnerPageHeader title={'Profile'}/>
-                <ScrollView padder contentContainerStyle={{display: 'flex', flexGrow: 1, justifyContent: 'center'}}>
-                    <Card transparent>
-                        <CardItem>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.card}>
+                        <View style={styles.cardItem}>
                             <Field name={'company'}
                                    keyboardType={'default'}
                                    placeholder={'Company'}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'phone'}
                                    keyboardType={'phone-pad'}
                                    placeholder={'Phone'}
                                    validate={[required, phone]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'address'}
                                    keyboardType={'default'}
                                    placeholder={'Address'}
                                    validate={[required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'base_currency'}
                                    keyboardType={'default'}
                                    placeholder={'Base Items Currency'}
@@ -105,31 +101,61 @@ class Profile extends Component<{}> {
                                    validate={[required]}
                                    placeHolder={'Select Base Currency'}
                                    component={renderSelectOption}/>
-                        </CardItem>
-                        <CardItem footer>
-                            <Body>
-                                <Button padder block primary onPress={handleSubmit(this.onSubmit)}>
-                                    <Text>Save Data</Text>
-                                </Button>
-                            </Body>
-                        </CardItem>
-                    </Card>
-                    <Card transparent>
-                        <CardItem footer>
-                            <Body>
-                                <Button padder block danger onPress={() => {
-                                    this.logoutUser();
-                                }}>
-                                    <Text>Logout</Text>
-                                </Button>
-                            </Body>
-                        </CardItem>
-                    </Card>
+                        </View>
+
+                        <Button style={styles.primaryButton} onPress={handleSubmit(this.onSubmit)}>
+                            <Text style={styles.primaryButtonText}>Save Data</Text>
+                        </Button>
+                    </View>
+
+                    <View style={styles.card}>
+                        <Button style={styles.dangerButton} onPress={() => this.logoutUser()}>
+                            <Text style={styles.primaryButtonText}>Logout</Text>
+                        </Button>
+                    </View>
                 </ScrollView>
-            </Container>
+            </View>
         );
     };
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 20,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        padding: 12,
+        marginBottom: 10,
+    },
+    cardItem: {
+        marginBottom: 4,
+    },
+    primaryButton: {
+        marginTop: 8,
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    dangerButton: {
+        backgroundColor: '#dc2626',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    primaryButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+    },
+});
 
 
 /**

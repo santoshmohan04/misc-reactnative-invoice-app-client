@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Actions} from '../../utils/NavigationService';
-import {Button, Card, CardItem, Container, Footer, FooterTab, Text, Toast} from 'native-base';
-import {ScrollView} from 'react-native';
+import {Button, Text} from 'tamagui';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import {Field, reduxForm} from 'redux-form';
 import {compose} from 'redux';
@@ -51,11 +51,7 @@ class ItemForm extends Component<{}> {
             if (!response.success) {
                 throw response;
             } else {
-                Toast.show({
-                    text: 'Items list successfully updated.',
-                    buttonText: 'Okay',
-                    type: 'success',
-                });
+                Alert.alert('Success', 'Items list successfully updated.');
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
@@ -76,20 +72,20 @@ class ItemForm extends Component<{}> {
         const {handleSubmit, editItem, getUser: {userDetails}} = this.props;
         const currency = getCurrency(userDetails.base_currency);
         return (
-            <Container>
+            <View style={styles.container}>
                 {editItem.isLoading && <Loader/>}
                 <InnerPageHeader title={'Item'}/>
-                <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
-                    <Card style={{paddingHorizontal: 10}}>
-                        <CardItem cardBody>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.card}>
+                        <View style={styles.cardItem}>
                             <Field name={'name'}
                                    keyboardType={'default'}
                                    placeholder={'Item Name'}
                                    icon={'ios-barcode'}
                                    validate={[required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'price'}
                                    keyboardType={'decimal-pad'}
                                    placeholder={'Unit Price'}
@@ -98,25 +94,24 @@ class ItemForm extends Component<{}> {
                                    format={value => (formatCurrency(value, currency))}
                                    normalize={value => (normalizeCurrency(value))}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'description'}
                                    keyboardType={'default'}
                                    placeholder={'Description'}
                                    icon={'ios-paper'}
                                    multiline
                                    component={renderTextInput}/>
-                        </CardItem>
-                    </Card>
+                        </View>
+                    </View>
+                    <View style={styles.bottomSpacer}/>
                 </ScrollView>
-                <Footer>
-                    <FooterTab>
-                        <Button padder block primary onPress={handleSubmit(this.onSubmit)}>
-                            <Text>Save</Text>
-                        </Button>
-                    </FooterTab>
-                </Footer>
-            </Container>
+                <View style={styles.footer}>
+                    <Button style={styles.saveButton} onPress={handleSubmit(this.onSubmit)}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </Button>
+                </View>
+            </View>
         );
     };
 
@@ -126,6 +121,49 @@ class ItemForm extends Component<{}> {
     }
 
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 12,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        overflow: 'hidden',
+    },
+    cardItem: {
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+    },
+    footer: {
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: '#ffffff',
+        padding: 10,
+    },
+    saveButton: {
+        width: '100%',
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    saveButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+    },
+    bottomSpacer: {
+        height: 8,
+    },
+});
 
 /**
  * Retrieves initial field values in case of editing

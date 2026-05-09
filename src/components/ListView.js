@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Body, ListItem, Right, Text} from 'native-base';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
 
 /**
  * Component that maps list parameters to a list item component dynamically
@@ -7,16 +7,38 @@ import {Body, ListItem, Right, Text} from 'native-base';
 export default class ListView extends Component {
     render() {
         return (
-            <ListItem noIndent onPress={this.props.handleClickEvent}>
-                <Body style={{flex:1}}>
+            <Pressable style={styles.row} onPress={this.props.handleClickEvent}>
+                <View style={styles.body}>
                     <Text>{this.props.title}</Text>
-                    <Text note numberOfLines={1}>{this.props.subtitle}</Text>
-                </Body>
-                <Right>
+                    <Text style={styles.note} numberOfLines={1}>{this.props.subtitle}</Text>
+                </View>
+                <View style={styles.right}>
                     <Text>{this.props.right}</Text>
-                    {this.props.rightSub && <Text note numberOfLines={1}>{this.props.rightSub}</Text>}
-                </Right>
-            </ListItem>
+                    {this.props.rightSub && <Text style={styles.note} numberOfLines={1}>{this.props.rightSub}</Text>}
+                </View>
+            </Pressable>
         );
     }
 }
+
+const styles = StyleSheet.create({
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.08)',
+    },
+    body: {
+        flex: 1,
+    },
+    right: {
+        alignItems: 'flex-end',
+        maxWidth: '45%',
+    },
+    note: {
+        color: 'rgba(0,0,0,0.55)',
+        fontSize: 12,
+    },
+});

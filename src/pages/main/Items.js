@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {View} from 'react-native';
-import {Container, Fab, Icon, List} from 'native-base';
+import {FlatList, StyleSheet, View} from 'react-native';
+import {Button, Text} from 'tamagui';
 import ListView from '../../components/ListView';
 import {Actions} from '../../utils/NavigationService';
 import Loader from '../../components/Loader';
@@ -19,21 +19,21 @@ class Items extends Component<{}> {
         const {getItems, getUser: {userDetails}} = this.props;
         const currency = getCurrency(userDetails.base_currency);
         return (
-            <Container>
+            <View style={styles.container}>
                 {getItems.isLoading && <Loader/>}
                 <PageHeader title={'Items'}/>
-                <View style={{flex: 1}}>
+                <View style={styles.content}>
                     {this.renderItemsList(getItems.itemsList || [], currency)}
-                    <Fab
-                        style={{backgroundColor: '#5067FF'}}
-                        position="bottomRight"
+                    <Button
+                        circular
+                        style={styles.fab}
                         onPress={() => {
                             this.addNewItem();
                         }}>
-                        <Icon name="add"/>
-                    </Fab>
+                        <Text style={styles.fabText}>+</Text>
+                    </Button>
                 </View>
-            </Container>
+            </View>
         );
     };
 
@@ -63,29 +63,56 @@ class Items extends Component<{}> {
      * @returns {*}
      */
     renderItemsList(itemsList, currency) {
-        return (<List
-            ListEmptyComponent={
-                <EmptyListPlaceHolder
-                    type={'item'}
-                    message={'No items found.\nPress the plus button to add new items.'}/>}
-            dataArray={itemsList}
-            renderRow={
-                (item) =>
+        return (
+            <FlatList
+                ListEmptyComponent={
+                    <EmptyListPlaceHolder
+                        type={'item'}
+                        message={'No items found.\nPress the plus button to add new items.'}/>
+                }
+                data={itemsList}
+                renderItem={({item}) => (
                     <ListView
                         title={item.name}
                         subtitle={item.description}
                         right={formatCurrency(item.price, currency)}
                         ListEmptyComponent={Logo}
-                        handleClickEvent={
-                            () => {
-                                this.editItem(item);
-                            }
-                        }/>
-            }
-            keyExtractor={(item, index) => index.toString()}>
-        </List>);
+                        handleClickEvent={() => {
+                            this.editItem(item);
+                        }}
+                    />
+                )}
+                keyExtractor={(item, index) => item._id || index.toString()}
+            />
+        );
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    },
+    fab: {
+        position: 'absolute',
+        right: 16,
+        bottom: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5067FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    fabText: {
+        color: '#ffffff',
+        fontSize: 28,
+        lineHeight: 28,
+        marginTop: -2,
+    },
+});
 
 /**
  * map props to item reducer to get items list

@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, View} from 'react-native';
-import {Spinner} from 'native-base';
+import {ActivityIndicator, StyleSheet, View} from 'react-native';
 
 /**
  * Loader component shows when retrieving or sending data
@@ -10,7 +9,7 @@ class Loader extends Component<{}> {
     render() {
         return (
             <View style={styles.container}>
-                <Spinner color='blue'/>
+                <ActivityIndicator color='blue' size='large'/>
             </View>
         );
     };

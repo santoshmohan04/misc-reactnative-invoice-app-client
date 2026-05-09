@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import {StyleSheet} from 'react-native';
-import {Container, Text} from 'native-base';
-import {ScrollView} from 'react-native';
+import {ScrollView, View, Text} from 'react-native';
 
 /**
  * Placeholder component for empty lists
@@ -10,18 +9,25 @@ import {ScrollView} from 'react-native';
 export default class EmptyListPlaceHolder extends Component<{}> {
     render() {
         return (
-            <Container>
-                <Content padder contentContainerStyle={{display: 'flex', flex: 1, justifyContent: 'center'}}>
+            <View style={styles.container}>
+                <ScrollView contentContainerStyle={styles.contentContainer}>
                     {/*<Image style={{width: 120, height: 120}}*/}
                     {/*       source={require(`../assets/images/empty-${this.props.type}-list.png`)}/>*/}
                     <Text style={styles.logoText}> {this.props.message}</Text>
-                </Content>
-            </Container>
+                </ScrollView>
+            </View>
         );
     };
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    contentContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+    },
     logoText: {
         textAlign: 'center',
         fontSize: 16,

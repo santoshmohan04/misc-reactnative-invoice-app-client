@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {Button, Card, CardItem, Container, Footer, FooterTab, Text, Toast} from 'native-base';
-import {ScrollView} from 'react-native';
+import {Button, Text} from 'tamagui';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
 import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
 import {Field, reduxForm} from 'redux-form';
 import {compose} from 'redux';
@@ -49,11 +49,7 @@ class CustomerForm extends Component<{}> {
             if (!response.success) {
                 throw response;
             } else {
-                Toast.show({
-                    text: 'Customers list successfully updated.',
-                    buttonText: 'Okay',
-                    type: 'success',
-                });
+                Alert.alert('Success', 'Customers list successfully updated.');
             }
         } catch (e) {
             const newError = new ErrorUtils(e);
@@ -75,84 +71,126 @@ class CustomerForm extends Component<{}> {
     render() {
         const {handleSubmit, editCustomer} = this.props;
         return (
-            <Container>
+            <View style={styles.container}>
                 {editCustomer.isLoading && <Loader/>}
                 <InnerPageHeader title={'Customer'}/>
-                <ScrollView padder contentContainerStyle={{flexGrow: 1}}>
-                    <Card style={{paddingHorizontal: 10}}>
-                        <CardItem cardBody listItemPadding>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.card}>
+                        <View style={styles.cardItem}>
                             <Field name={'name'}
                                    keyboardType={'default'}
                                    placeholder={'Customer Name'}
                                    icon={'ios-contact'}
                                    validate={[required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'email'}
                                    keyboardType={'email-address'}
                                    placeholder={'Email'}
                                    icon={'ios-mail'}
                                    validate={[email, required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
 
                             <Field name={'company'}
                                    keyboardType={'default'}
                                    placeholder={'Company'}
                                    icon={'ios-briefcase'}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'phone'}
                                    keyboardType={'phone-pad'}
                                    placeholder={'Phone'}
                                    icon={'ios-call'}
                                    validate={[phone, required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'mobile'}
                                    keyboardType={'phone-pad'}
                                    placeholder={'Mobile'}
                                    icon={'ios-phone-portrait'}
                                    component={renderTextInput}/>
-                        </CardItem>
-                    </Card>
-                    <Card style={{paddingHorizontal: 10}}>
-                        <CardItem cardBody>
+                        </View>
+                    </View>
+                    <View style={styles.card}>
+                        <View style={styles.cardItem}>
                             <Field name={'address_1'}
                                    keyboardType={'default'}
                                    placeholder={'Address 1'}
                                    validate={[required]}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'address_2'}
                                    keyboardType={'default'}
                                    placeholder={'Address 2'}
                                    component={renderTextInput}/>
-                        </CardItem>
-                        <CardItem cardBody>
+                        </View>
+                        <View style={styles.cardItem}>
                             <Field name={'address_3'}
                                    keyboardType={'default'}
                                    placeholder={'Address 3'}
                                    component={renderTextInput}/>
-                        </CardItem>
-                    </Card>
+                        </View>
+                    </View>
+                    <View style={styles.bottomSpacer}/>
                 </ScrollView>
-                <Footer>
-                    <FooterTab>
-                        <Button padder block primary onPress={handleSubmit(this.onSubmit)}>
-                            <Text>Save</Text>
-                        </Button>
-                    </FooterTab>
-                </Footer>
-            </Container>
+                <View style={styles.footer}>
+                    <Button style={styles.saveButton} onPress={handleSubmit(this.onSubmit)}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </Button>
+                </View>
+            </View>
         );
     };
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 12,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.08)',
+        overflow: 'hidden',
+    },
+    cardItem: {
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+    },
+    footer: {
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: '#ffffff',
+        padding: 10,
+    },
+    saveButton: {
+        width: '100%',
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    saveButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+    },
+    bottomSpacer: {
+        height: 8,
+    },
+});
 
 /**
  * Retrieves initial field values in case of editing

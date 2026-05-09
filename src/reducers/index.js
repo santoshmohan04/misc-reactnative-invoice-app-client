@@ -15,6 +15,8 @@ const reducers = {
     form: formReducer,
 };
 
+export { reducers };
+
 const appReducer = combineReducers(reducers);
 const rootReducer = (state, action) => {
     if (action.type === 'USER_LOGOUT_SUCCESS') {
