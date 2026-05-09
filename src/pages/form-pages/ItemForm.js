@@ -1,131 +1,115 @@
-import React, {Component} from 'react';
-import {Actions} from '../../utils/NavigationService';
-import {Button, Text} from 'tamagui';
-import {Alert, ScrollView, StyleSheet, View} from 'react-native';
-import renderTextInput from '../../components/reduxFormRenderers/RenderTextInput';
-import {Field, reduxForm} from 'redux-form';
-import {compose} from 'redux';
-import {connect} from 'react-redux';
-import {formatCurrency, normalizeCurrency, number, required} from '../../utils/redux.form.utils';
-import {ErrorUtils} from '../../utils/error.utils';
-import {editItem, getItemsList} from '../../actions/item.actions';
+import React from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Text as TText } from 'tamagui';
+import { useForm, Controller } from 'react-hook-form';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Loader from '../../components/Loader';
-import {getCurrency} from '../../utils/currencies.utils';
 import InnerPageHeader from '../../components/InnerPageHeader';
+import { getCurrency } from '../../utils/currencies.utils';
+import { useUpsertItemMutation } from '../../store/apis/dataApi';
+import { useAuthUser } from '../../store/hooks';
 
-/**
- * Form component for adding a new item or editing an existing one
- */
-class ItemForm extends Component<{}> {
+const FIELD_STYLE = {
+    minHeight: 42,
+    borderWidth: 1,
+    borderColor: 'rgba(15,23,42,0.18)',
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    fontSize: 14,
+    color: '#0f172a',
+};
 
-    /**
-     * Dispatches an action to edit or add item
-     * alerts on error and refreshes list on success
-     *
-     * @param values
-     * @returns {Promise<void>}
-     */
-    modifyItemData = async (values) => {
-        try {
-            const response = await this.props.dispatch(editItem(values));
-            if (!response.success) {
-                throw response;
-            } else {
-                await this.refreshItemsList();
-            }
-        } catch (e) {
-            const newError = new ErrorUtils(e);
-            newError.showAlert();
-        }
-    };
-
-    /**
-     * Called after modifying item data by editing or adding.
-     * dispatches action to load items list with changes
-     *
-     * @returns {Promise<void>}
-     */
-    async refreshItemsList() {
-        try {
-            const response = await this.props.dispatch(getItemsList());
-            if (!response.success) {
-                throw response;
-            } else {
-                Alert.alert('Success', 'Items list successfully updated.');
-            }
-        } catch (e) {
-            const newError = new ErrorUtils(e);
-            newError.showAlert();
-        }
-    }
-
-    /**
-     * Submits item form values
-     *
-     * @param values
-     */
-    onSubmit = (values) => {
-        this.modifyItemData(values);
-    };
-
-    render() {
-        const {handleSubmit, editItem, getUser: {userDetails}} = this.props;
-        const currency = getCurrency(userDetails.base_currency);
-        return (
-            <View style={styles.container}>
-                {editItem.isLoading && <Loader/>}
-                <InnerPageHeader title={'Item'}/>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <View style={styles.card}>
-                        <View style={styles.cardItem}>
-                            <Field name={'name'}
-                                   keyboardType={'default'}
-                                   placeholder={'Item Name'}
-                                   icon={'ios-barcode'}
-                                   validate={[required]}
-                                   component={renderTextInput}/>
-                        </View>
-                        <View style={styles.cardItem}>
-                            <Field name={'price'}
-                                   keyboardType={'decimal-pad'}
-                                   placeholder={'Unit Price'}
-                                   valdiate={[number, required]}
-                                   icon={'ios-pricetag'}
-                                   format={value => (formatCurrency(value, currency))}
-                                   normalize={value => (normalizeCurrency(value))}
-                                   component={renderTextInput}/>
-                        </View>
-                        <View style={styles.cardItem}>
-                            <Field name={'description'}
-                                   keyboardType={'default'}
-                                   placeholder={'Description'}
-                                   icon={'ios-paper'}
-                                   multiline
-                                   component={renderTextInput}/>
-                        </View>
-                    </View>
-                    <View style={styles.bottomSpacer}/>
-                </ScrollView>
-                <View style={styles.footer}>
-                    <Button style={styles.saveButton} onPress={handleSubmit(this.onSubmit)}>
-                        <Text style={styles.saveButtonText}>Save</Text>
-                    </Button>
-                </View>
+const FormField = ({ label, control, name, rules, inputProps }) => (
+    <Controller
+        control={control}
+        name={name}
+        rules={rules}
+        render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
+            <View style={styles.fieldWrap}>
+                {label ? <Text style={styles.label}>{label}</Text> : null}
+                <TextInput
+                    style={[FIELD_STYLE, inputProps?.multiline && { minHeight: 80, paddingTop: 10, textAlignVertical: 'top' }]}
+                    value={value ?? ''}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholderTextColor="#94a3b8"
+                    {...inputProps}
+                />
+                {error ? <Text style={styles.error}>{error.message}</Text> : null}
             </View>
-        );
+        )}
+    />
+);
+
+const ItemForm = () => {
+    const navigation = useNavigation();
+    const route = useRoute();
+    const item = route.params?.item;
+    const user = useAuthUser();
+    const currency = getCurrency(user?.base_currency);
+
+    const [upsertItem, { isLoading }] = useUpsertItemMutation();
+
+    const { control, handleSubmit } = useForm({
+        defaultValues: {
+            name: item?.name ?? '',
+            price: item?.price != null ? String(item.price) : '',
+            description: item?.description ?? '',
+        },
+    });
+
+    const onSubmit = async (values) => {
+        const price = parseFloat(values.price);
+        if (isNaN(price) || price <= 0) {
+            return;
+        }
+        try {
+            const payload = {
+                name: values.name,
+                price,
+                description: values.description,
+                ...(item?._id && { _id: item._id }),
+            };
+            await upsertItem(payload).unwrap();
+            Alert.alert('Success', 'Item successfully saved.');
+            navigation.goBack();
+        } catch (err) {
+            Alert.alert('Error', err?.data?.message ?? 'Failed to save item.');
+        }
     };
 
-    goBack() {
-        Actions.pop();
-        Actions.refresh();
-    }
-
-}
+    return (
+        <View style={styles.container}>
+            {isLoading && <Loader />}
+            <InnerPageHeader title="Item" />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.card}>
+                    <FormField label="Item Name *" control={control} name="name"
+                        rules={{ required: 'Name is required', minLength: { value: 2, message: 'At least 2 characters' } }}
+                        inputProps={{ placeholder: 'Item Name', keyboardType: 'default' }} />
+                    <FormField label={`Unit Price (${currency?.symbol ?? '$'}) *`} control={control} name="price"
+                        rules={{
+                            required: 'Price is required',
+                            validate: v => !isNaN(parseFloat(v)) && parseFloat(v) > 0 || 'Must be a positive number',
+                        }}
+                        inputProps={{ placeholder: '0.00', keyboardType: 'decimal-pad' }} />
+                    <FormField label="Description" control={control} name="description"
+                        inputProps={{ placeholder: 'Description', multiline: true, numberOfLines: 3 }} />
+                </View>
+                <View style={styles.bottomSpacer} />
+            </ScrollView>
+            <View style={styles.footer}>
+                <Button style={styles.saveButton} onPress={handleSubmit(onSubmit)}>
+                    <TText style={styles.saveButtonText}>Save</TText>
+                </Button>
+            </View>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     scrollContent: {
         flexGrow: 1,
         paddingHorizontal: 10,
@@ -139,11 +123,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(0,0,0,0.08)',
         overflow: 'hidden',
+        padding: 10,
     },
-    cardItem: {
-        paddingHorizontal: 10,
-        paddingVertical: 2,
-    },
+    fieldWrap: { marginBottom: 8 },
+    label: { marginBottom: 4, color: '#475569', fontSize: 13 },
+    error: { color: '#f32013', fontSize: 12, marginTop: 2 },
     footer: {
         borderTopWidth: 1,
         borderTopColor: 'rgba(0,0,0,0.08)',
@@ -156,51 +140,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    saveButtonText: {
-        color: '#ffffff',
-        fontWeight: '700',
-    },
-    bottomSpacer: {
-        height: 8,
-    },
+    saveButtonText: { color: '#ffffff', fontWeight: '700' },
+    bottomSpacer: { height: 8 },
 });
 
-/**
- * Retrieves initial field values in case of editing
- * Maps props to getItems and editItem reducers
- *
- * @param state
- * @param props
- * @returns {{initialValues: *, getItems: getItems, editItem: editItem, getUser: getUser}}
- */
-const mapStateToProps = (state, props) => {
-    let initialValues;
-    const item = props.route?.params?.item || props.item;
-    if (item) {
-        initialValues = {
-            name: item.name,
-            price: item.price.toString(),
-            description: item.description,
-        };
-    }
-    return ({
-        initialValues,
-        getUser: state.userReducer.getUser,
-        editItem: state.itemReducer.editItem,
-        getItems: state.itemReducer.getItems,
-    });
-};
-
-const mapDispatchToProps = (dispatch) => ({
-    dispatch,
-});
-
-export default compose(
-    connect(mapStateToProps, mapDispatchToProps),
-    reduxForm({
-        form: 'itemForm',
-        enableReinitialize: true,
-        keepDirtyOnReinitialize: true,
-        updateUnregisteredFields: true,
-    }),
-)(ItemForm);
+export default ItemForm;

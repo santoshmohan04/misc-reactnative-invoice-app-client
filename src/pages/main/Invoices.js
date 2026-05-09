@@ -1,107 +1,66 @@
-import React, {Component} from 'react';
-import {Actions} from '../../utils/NavigationService';
-import {FlatList, StyleSheet, View} from 'react-native';
-import {Button, Text} from 'tamagui';
-import {connect} from 'react-redux';
+import React from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Button, Text } from 'tamagui';
+import moment from 'moment';
 import ListView from '../../components/ListView';
 import EmptyListPlaceHolder from '../../components/EmptyListPlaceHolder';
 import Loader from '../../components/Loader';
-import moment from 'moment';
-import {zeroPad} from '../../utils/general.utils';
-import {getCurrency} from '../../utils/currencies.utils';
-import {formatCurrency} from '../../utils/redux.form.utils';
 import PageHeader from '../../components/MainPageHeader';
+import { Actions } from '../../utils/NavigationService';
+import { getCurrency } from '../../utils/currencies.utils';
+import { formatCurrency } from '../../utils/redux.form.utils';
+import { zeroPad } from '../../utils/general.utils';
+import { useGetInvoicesQuery, useGetCustomersQuery } from '../../store/apis/dataApi';
+import { useAuthUser } from '../../store/hooks';
 
-/**
- * Component that renders the invoices list
- */
-class Invoices extends Component<{}> {
+const Invoices = () => {
+    const user = useAuthUser();
+    const currency = getCurrency(user?.base_currency);
+    const { data: invoicesList = [], isLoading, refetch } = useGetInvoicesQuery();
+    const { data: customersList = [] } = useGetCustomersQuery();
 
-    render() {
-        const {getUser: {userDetails}, getInvoices, getCustomers} = this.props;
-        const currency = getCurrency(userDetails.base_currency);
-
-        return (
-            <View style={styles.container}>
-                {getInvoices.isLoading && <Loader/>}
-                <PageHeader title={'Invoices'}/>
-                <View style={styles.content}>
-                    {this.renderInvoicesList(getInvoices.invoicesList || [],
-                        getCustomers.customersList || [],
-                        currency)}
-                    <Button
-                        circular
-                        style={styles.fab}
-                        onPress={() => {
-                            this.addNewInvoice();
-                        }}>
-                        <Text style={styles.fabText}>+</Text>
-                    </Button>
-                </View>
-            </View>
-        );
+    const addNewInvoice = () => {
+        const newNumber = zeroPad(invoicesList.length, 8);
+        Actions.invoiceForm({ invoice: null, newNumber });
     };
 
-    /**
-     * called on pressing add button
-     * opens invoice form page with null to indicate adding a new invoice
-     */
-    addNewInvoice() {
-        let newNumber = this.props.getInvoices ? this.props.getInvoices.invoicesList.length : 1;
-        Actions.invoiceForm({invoice: null, newNumber: zeroPad(newNumber, 8)});
-    }
-
-    /**
-     * called on pressing add button
-     * opens invoice form page with an invoice object to indicate editing an existing invoice
-     *
-     * @param invoice
-     */
-    editInvoice(invoice) {
-        Actions.invoiceForm({invoice: invoice});
-    }
-
-    /**
-     * Dynamically maps invoice list to list component
-     * Maps customer names to corresponding invoices
-     *
-     * @param invoicesList
-     * @param customersList
-     * @param currency
-     * @returns {*}
-     */
-    renderInvoicesList(invoicesList, customersList, currency) {
-        return (
-            <FlatList
-                ListEmptyComponent={
-                    <EmptyListPlaceHolder
-                        type={'item'}
-                        message={'No invoices found.\nPress the plus button to add new items.'}/>}
-                data={invoicesList}
-                renderItem={({item: invoice}) => (
-                    <ListView
-                        title={(customersList.find(e => e._id === invoice.customer) || {}).name}
-                        subtitle={invoice.number}
-                        right={formatCurrency(invoice.total, currency)}
-                        rightSub={moment(invoice.issued).format('DD/MM/YYYY')}
-                        handleClickEvent={() => {
-                            this.editInvoice(invoice);
-                        }}
-                    />
-                )}
-                keyExtractor={(item, index) => item._id || index.toString()}
-            />
-        );
-    }
-}
+    return (
+        <View style={styles.container}>
+            {isLoading && <Loader />}
+            <PageHeader title="Invoices" />
+            <View style={styles.content}>
+                <FlatList
+                    ListEmptyComponent={
+                        <EmptyListPlaceHolder
+                            type="item"
+                            message="No invoices found.\nPress the plus button to add new items."
+                        />
+                    }
+                    data={invoicesList}
+                    onRefresh={refetch}
+                    refreshing={isLoading}
+                    renderItem={({ item: invoice }) => (
+                        <ListView
+                            title={(customersList.find(c => c._id === invoice.customer) || {}).name}
+                            subtitle={invoice.number}
+                            right={formatCurrency(invoice.total, currency)}
+                            rightSub={moment(invoice.issued).format('DD/MM/YYYY')}
+                            handleClickEvent={() => Actions.invoiceForm({ invoice })}
+                        />
+                    )}
+                    keyExtractor={(item, index) => item._id || index.toString()}
+                />
+                <Button circular style={styles.fab} onPress={addNewInvoice}>
+                    <Text style={styles.fabText}>+</Text>
+                </Button>
+            </View>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    content: {
-        flex: 1,
-    },
+    container: { flex: 1 },
+    content: { flex: 1 },
     fab: {
         position: 'absolute',
         right: 16,
@@ -121,22 +80,4 @@ const styles = StyleSheet.create({
     },
 });
 
-/**
- * map props to invoices reducer to get invoices list
- * map props to customer reducer to get map customer names to invoices
- * map props to user reducer to get base currency
- *
- * @param state
- * @returns {{getInvoices: getInvoices, getItems: getItems, getCustomers: getCustomers, getUser: getUser}}
- */
-const mapStateToProps = (state) => ({
-    getInvoices: state.invoiceReducer.getInvoices,
-    getCustomers: state.customerReducer.getCustomers,
-    getUser: state.userReducer.getUser,
-});
-
-const mapDispatchToProps = (dispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Invoices);
+export default Invoices;

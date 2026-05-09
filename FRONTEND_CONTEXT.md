@@ -5,10 +5,10 @@ Workspace: misc-reactnative-invoice-app-client
 
 ## Assumptions And Scope
 - This document analyzes both frontend implementations present in the repository:
-  - Mobile-first Expo React Native app under src and root config.
-  - Separate Next.js web application under web-app.
-- Analysis is based on current source/config files and dependency manifests/installed package graph.
-- No application code was modified for this document.
+  - Mobile-first Expo React Native app under `src` and root config.
+  - Separate Next.js web application under `web-app`.
+- Analysis is based on the current repository state, plus recent migration work performed in Phase 2 (RTK/RTK Query/react-hook-form).
+- This file has been updated to reflect code changes made in the workspace: RTK infrastructure, API fixes, and several migrated screens/forms.
 
 ---
 
@@ -42,15 +42,22 @@ Web (Next app in web-app):
 - Placeholder reports/settings pages
 
 ## Current Development Status
-- Mobile app is functional and relatively mature, but has architectural aging:
-  - class components + redux-form + thunk pattern
-  - mixed legacy/modern patterns
-- Web strategy is split:
-  - Expo Web support in main app is configured and runnable.
-  - A second standalone Next app exists with partially scaffolded features and API mismatch.
-- There are clear signs of in-progress migration/parallel experimentation:
-  - root middleware.ts + root apiSlice.ts (Next-oriented files) outside web-app
-  - separate DashboardLayout.tsx in root plus web-app/src/app/(dashboard)/layout.tsx
+- Mobile app: modernization is in progress and several Phase 2 tasks are complete. The codebase is now hybrid: some screens use the new RTK + RTK Query + react-hook-form stack while legacy thunks and `redux-form` remain for non-migrated screens.
+
+  Key Phase 2 foundation items completed:
+  - TypeScript enabled with `strict` settings and path aliases (see `tsconfig.json`).
+  - RTK store with `redux-persist` for auth state and typed hooks (`useAppDispatch`, `useAppSelector`, `useAuth*`).
+  - `authApi` and `dataApi` implemented with RTK Query. `authApi` includes automatic token refresh with a mutex to avoid concurrent refreshes.
+  - `react-hook-form` + Zod used for migrated forms; example `Login.tsx` and `SignUp.tsx` created in TypeScript.
+  - Several files rewritten to match backend contracts and shared package exports (notably `src/store/apis/authApi.ts`, `src/store/apis/dataApi.ts`).
+
+  Migration progress (delta):
+  - List screens migrated: `Invoices`, `Customers`, `Items` (now function components using RTK Query hooks).
+  - Forms migrated: `CustomerForm`, `ItemForm` → converted to `react-hook-form` implementations.
+  - `InvoiceForm` migration is in-progress (complex FieldArray and compute logic).
+  - `Profile` migration and cleanup of duplicate `Login.js/SignUp.js` files remain.
+
+  Backward compatibility: legacy thunks, actions, reducers and `redux-form` remain in the repo during the incremental migration.
 
 ## Platforms Supported
 - Android: configured via android/
@@ -123,7 +130,8 @@ Form libraries:
 - redux-form 8.3.10
 
 Validation libraries:
-- Custom validators in src/utils/redux.form.utils.js
+  - Zod (used with react-hook-form for migrated screens) and @hookform/resolvers for runtime validation.
+  - Legacy custom validators remain in `src/utils/redux.form.utils.js` while remaining forms are migrated.
 
 Storage libraries:
 - expo-secure-store 13.0.2
@@ -232,16 +240,13 @@ Linting:
 - src/middleware.ts: Next middleware (currently permissive)
 
 ## Current Architecture Pattern
-Mobile: layered but legacy Redux architecture
-- View layer: class component screens + connect HOC
-- State: normalized by feature reducer buckets
-- Side effects: thunk action creators
-- API: centralized fetch wrapper
+Mobile: hybrid (legacy + modern)
+- New/modern pattern: RTK + RTK Query for server state, react-hook-form for form state, TypeScript with pre-typed hooks (see `src/store/hooks.ts`).
+- Legacy pattern still present: `redux-form`, thunks, and some class `connect` components remain until migration completes.
+- API layer: both legacy `src/service/api.js` and new RTK Query APIs (`src/store/apis/authApi.ts`, `src/store/apis/dataApi.ts`) coexist; prefer RTK Query for new work and migrations.
 
-Web-app: modern client-heavy Next pattern
-- App Router layouts/pages
-- Client components + Redux provider at root
-- RTK Query for data fetching
+Web-app: modern Next.js app
+- Next app uses RTK Query for data fetching and a modern React stack (client components + Tailwind/Tamagui split depending on target).
 
 ## Separation Of Concerns
 Strengths:
@@ -419,82 +424,47 @@ Web-app:
 
 ## Token Management
 Mobile:
-- tokens extracted from x-auth / x-access-token / authorization or payload fields
-- outgoing token in Authorization Bearer header
-- auth persisted via secureStorage strategy
+- Tokens are now centrally managed in an RTK `auth` slice and persisted with `redux-persist` (auth-only). The RTK Query `baseQuery` attaches `Authorization: Bearer <token>` automatically for authenticated calls.
+- Token extraction/utility helpers live in `packages/shared-api` (e.g. `extractAccessToken`) and are used by `authApi` and helper code.
 
 Web-app:
-- token stored in Redux auth state only (not persisted by default)
-- middleware expects cookie auth_token but no cookie set in login flow
+- Web stores tokens in the RTK auth slice as well; persistence behavior is environment-specific (localStorage/cookies) but the preferred pattern is using RTK state and refresh flows via `authApi`.
 
 ## Refresh Token Handling
-- refreshToken extraction exists in mobile API wrapper.
-- No refresh workflow implementation detected (no refresh endpoint call, no interceptor retry after 401).
+- RTK Query `authApi` implements an automatic refresh workflow: on 401 `baseQueryWithReauth` requests the refresh endpoint, updates tokens via `authSlice` on success, and retries the original request. A `RefreshMutex` is used to ensure only one refresh is in-flight and to queue other requests until refresh completes. If refresh fails, the user is logged out.
 
 ## Error Handling
-- fetchApi throws structured result with responseBody.
-- ErrorUtils maps message to Alert in UI.
-- No centralized error boundary around API calls.
+- RTK Query endpoints use `transformResponse` to unwrap success envelopes; legacy `fetchApi` returned a structured result. Error mapping utilities exist in `src/utils/error.utils.js` and are used in UI components to show messages and alerts.
 
 ## Retry Strategy
-- None detected. Timeout is hard fail after 5000ms.
+- No global retry/backoff policy is enabled by default; RTK Query supports retry options if needed and could be configured for flaky networks.
 
 ## Request Interceptors / Response Interceptors
-- No interceptor abstraction in mobile fetch implementation.
-- RTK Query baseQuery acts as a header preparation layer in web-app.
+- Legacy mobile API had no interceptor system; RTK Query's `baseQuery` now centralizes header injection and can handle refresh/retry logic.
 
 ## API Typing Quality
-- Mobile API contracts are untyped JS.
-- Web RTK endpoints are mostly any/implicit types.
+- New RTK Query APIs and TypeScript types are being introduced; migrated endpoints use typed Zod schemas and TypeScript interfaces. Legacy mobile API remains untyped JS and should be migrated progressively.
 
 ## All API Base URLs Detected
-- app.json: http://192.168.1.2:3333
-- app.json webBaseUrl: http://localhost:3333
-- mobile fallback in src/service/api.js: http://localhost:3333
-- web-app fallback in web-app/src/store/apiSlice.ts: http://localhost:3333
-- root apiSlice.ts fallback: http://localhost:3333
+- Configured base URLs appear in `app.json`, `src/service/api.js` and web-app RTK slices; environment helpers in `src/config/env.ts` and `web-app` centralize runtime selection.
 
-## Major Endpoints Detected
-Mobile endpoints:
-- /user/register
-- /user/login
-- /user/user
-- /user/logout
-- /user/edit
-- /customer/all
-- /customer/edit
-- /item/all
-- /item/edit
-- /invoice/all
-- /invoice/edit
-- /invoice/send
-- /payment/create
+## Major Endpoints Detected (canonical)
+Canonical endpoints aligned with `packages/api-contracts`:
+- `/user/login`, `/user/register`, `/user/user`, `/user/edit`, `/user/logout`, `/user/refresh`
+- `/invoice/all`, `/invoice/edit`, `/invoice/send`
+- `/customer/all`, `/customer/edit`
+- `/item/all`, `/item/edit`
+- `/payment/create`
 
-web-app RTK endpoints:
-- /auth/login
-- /auth/signup
-- /invoices
-- /customers
-- /items
-
-root apiSlice.ts endpoint:
-- /invoice/all (dashboard stats)
-
-Important mismatch:
-- Mobile uses /user/* and singular nouns /invoice/* style.
-- web-app uses /auth/* and plural resources /invoices, /customers, /items.
-- This implies either different backend APIs or incorrect web-app wiring.
+Note: earlier inconsistencies existed between mobile and web naming (singular vs plural, `/user` vs `/auth`). RTK Query files were aligned to the canonical `packages/api-contracts` endpoints during Phase 2 updates.
 
 ## Missing Abstractions
-- No domain service layer above fetchApi in mobile.
-- No shared API schema/contract package between mobile and web-app.
-- No common error mapping abstraction with typed error codes.
+- Domain-level service wrappers above the transport layer are still sparse in mobile; consider adding small domain service modules that call RTK Query or shared contracts to centralize payload normalization and error handling.
 
 ## Security Concerns
-- HTTP URLs in config by default (no TLS).
-- Token logs present in auth.actions.js (console.log token/response).
-- No token expiry/refresh enforcement.
-- 5s timeout may trigger user frustration in slow networks with no retry/backoff.
+- Some configs include HTTP base URLs; ensure production avoids non-TLS endpoints.
+- Remove or silence token logging in legacy thunks (`auth.actions.js`).
+- The auth refresh flow now exists, but verify refresh token storage/rotation strategy for production security needs.
 
 ---
 

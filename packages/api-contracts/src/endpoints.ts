@@ -3,6 +3,7 @@ export const API_ENDPOINTS = {
     login: '/user/login',
     register: '/user/register',
     profile: '/user/user',
+    edit: '/user/edit',
     logout: '/user/logout',
     refreshPrimary: '/user/refresh',
     refreshFallback: '/auth/refresh',
