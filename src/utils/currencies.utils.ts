@@ -16,7 +16,12 @@ export const getCurrency = (id?: string): string | undefined => {
         return undefined;
     }
 
-    return currencies.find((c) => c._id === id)?.symbol_native;
+    const currency = currencies.find((c) => c._id === id);
+    if (!currency) {
+        return undefined;
+    }
+
+    return currency.symbol_native;
 };
 
 /**

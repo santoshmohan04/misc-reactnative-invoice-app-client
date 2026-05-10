@@ -9,7 +9,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "paths": {
       "@shared-api": ["./packages/shared-api/src/index.ts"],
       "@shared-utils": ["./packages/shared-utils/src/index.ts"],
