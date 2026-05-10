@@ -8,15 +8,11 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, BackHandler, StyleSheet, View, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as SplashScreen from 'expo-splash-screen';
 import Logo from '../components/Logo';
 import { useGetInvoicesQuery } from '../store/apis/dataApi';
 import { useGetCustomersQuery } from '../store/apis/dataApi';
 import { useGetItemsQuery } from '../store/apis/dataApi';
 import type { RootStackParamList } from '../types';
-
-// Keep splash screen visible while fetching data
-SplashScreen.preventAutoHideAsync();
 
 // Retry configuration
 const RETRY_CONFIG = {
@@ -77,13 +73,7 @@ const Splash = () => {
         return;
       }
 
-      // Success - hide splash and navigate
-      try {
-        await SplashScreen.hideAsync();
-      } catch (e) {
-        // Screen already hidden
-      }
-
+      // Success - navigate to home
       setIsLoadingPhase(false);
       // Small delay for better UX before navigation
       setTimeout(() => {
@@ -128,12 +118,6 @@ const Splash = () => {
       setRetryCount(0);
 
       // Auto-proceed after showing error
-      try {
-        await SplashScreen.hideAsync();
-      } catch (e) {
-        // Screen already hidden
-      }
-
       setTimeout(() => {
         navigation.replace('home');
       }, 3000);

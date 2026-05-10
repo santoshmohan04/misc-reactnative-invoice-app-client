@@ -99,7 +99,8 @@ const Routes: React.FC<RoutesProps> = ({ isLoggedIn }) => {
         const transitionDurationMs = navReadyAt.current > 0 ? Math.round(now - navReadyAt.current) : 0;
         navReadyAt.current = now;
 
-        if (transitionDurationMs > 700) {
+        const slowTransitionThreshold = __DEV__ ? 5000 : 700;
+        if (transitionDurationMs > slowTransitionThreshold) {
           logger.warn('Slow screen transition detected', 'navigation', {
             routeName: route?.name,
             transitionDurationMs,

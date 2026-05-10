@@ -8,9 +8,7 @@ const environment = process.env.EXPO_PUBLIC_ENV ?? (process.env.NODE_ENV === 'pr
 const release = `${Constants.expoConfig?.slug ?? 'invoice-app'}@${Constants.expoConfig?.version ?? '0.0.0'}`;
 const sentryDebug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
 
-export const reactNavigationIntegration = Sentry.reactNavigationIntegration({
-  enableTimeToInitialDisplay: true,
-});
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 let initialized = false;
 
@@ -24,7 +22,12 @@ export const initSentry = (): void => {
     enabled: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN),
     environment,
     release,
-    integrations: [reactNavigationIntegration as unknown as any],
+    integrations: [
+      new Sentry.ReactNativeTracing({
+        routingInstrumentation,
+        enableTimeToInitialDisplay: true,
+      }),
+    ],
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     profilesSampleRate: environment === 'production' ? 0.05 : 1.0,
     debug: sentryDebug,
@@ -44,7 +47,7 @@ export const initSentry = (): void => {
 export const registerNavigationTracing = (
   navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
 ): void => {
-  reactNavigationIntegration.registerNavigationContainer(navigationRef);
+  routingInstrumentation.registerNavigationContainer(navigationRef);
 };
 
 export const setSentryUserContext = (user?: {

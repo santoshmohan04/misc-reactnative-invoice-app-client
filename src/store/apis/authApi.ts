@@ -106,7 +106,10 @@ export const authApi = createApi({
           );
           instrumentApiSuccess('login');
         } catch (error) {
-          instrumentApiError('login', error);
+          instrumentApiError('login', error, {
+            baseUrl: getApiUrl(),
+            endpoint: API_ENDPOINTS.user.login,
+          });
         }
       },
     }),
@@ -147,6 +150,25 @@ export const authApi = createApi({
         method: 'POST',
         body,
       }),
+      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          const payload = unwrapSuccessPayload(data);
+          if (payload?.user) {
+            // Update Redux auth state with new user data from server
+            dispatch(
+              setCredentials({
+                user: payload.user,
+                access_token: undefined,
+                refresh_token: undefined,
+              }),
+            );
+          }
+          instrumentApiSuccess('update_user');
+        } catch (error) {
+          instrumentApiError('update_user', error);
+        }
+      },
       invalidatesTags: ['User'],
     }),
 

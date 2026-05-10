@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Button } from 'tamagui';
+import { Button, Text as TamaText } from 'tamagui';
 import { registerSchema, type RegisterFormData } from '@types/schemas';
 import { useRegisterMutation } from '@store/apis/authApi';
 import { useAppDispatch, useAuth } from '@store/hooks';
@@ -45,12 +45,7 @@ function SignUp() {
     },
   });
 
-  // Redirect to main screen if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigation.replace('home');
-    }
-  }, [isAuthenticated, navigation]);
+
 
   // Handle form submission
   const onSubmit = async (data: RegisterFormData) => {
@@ -208,13 +203,20 @@ function SignUp() {
           <Button
             onPress={handleSubmit(onSubmit)}
             disabled={isLoading}
-            style={styles.signUpButton}
+            size="$5"
             backgroundColor={isLoading ? '#999' : '#27AE60'}
+            color="#fff"
+            borderRadius={6}
+            marginTop={20}
+            marginBottom={16}
+            pressStyle={{ opacity: 0.8 }}
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.signUpButtonText}>Create Account</Text>
+              <TamaText color="#fff" fontSize={16} fontWeight="600">
+                Create Account
+              </TamaText>
             )}
           </Button>
 

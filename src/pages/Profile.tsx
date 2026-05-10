@@ -11,14 +11,16 @@ import profileSchema, { type ProfileFormData } from '../shared/validation/profil
 import InnerPageHeader from '../components/InnerPageHeader';
 import Loader from '../components/Loader';
 import { useUpdateUserMutation, useLogoutUserMutation } from '../store/apis/authApi';
-import { useAuth } from '../store/hooks';
+import { useAppDispatch, useAuth } from '../store/hooks';
 import { currencies } from '../utils/currencies.utils';
 import type { RootStackParamList } from '../types';
+import { authApi } from '../store/apis/authApi';
 
 const Profile: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const auth = useAuth();
   const user = auth?.user;
+  const dispatch = useAppDispatch();
 
   const { control, handleSubmit, reset } = useZodForm({
     schema: profileSchema,
@@ -32,6 +34,15 @@ const Profile: React.FC = () => {
 
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [logoutUser] = useLogoutUserMutation();
+
+  // Refetch user data when profile screen is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Invalidate the User tag to force refetch from server
+      dispatch(authApi.util.invalidateTags(['User']));
+    });
+    return unsubscribe;
+  }, [navigation, dispatch]);
 
   // Update form when user data changes
   useEffect(() => {

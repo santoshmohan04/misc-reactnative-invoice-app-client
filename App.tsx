@@ -19,16 +19,22 @@ import Main from './src/Main';
 
 const appStartedAt = performance.now();
 initSentry();
-startJsThreadFreezeMonitor();
+startJsThreadFreezeMonitor(__DEV__ ? 1200 : 600);
 
 const App: React.FC = () => {
+  const slowRenderThresholdMs = __DEV__ ? 500 : 120;
+
   const onRender = React.useCallback(
     (
       id: string,
       phase: 'mount' | 'update' | 'nested-update',
       actualDuration: number,
     ) => {
-      if (actualDuration > 120) {
+      if (__DEV__ && phase === 'mount') {
+        return;
+      }
+
+      if (actualDuration > slowRenderThresholdMs) {
         logger.warn('Slow render detected', 'render_profiler', {
           id,
           phase,
@@ -36,7 +42,7 @@ const App: React.FC = () => {
         });
       }
     },
-    [],
+    [slowRenderThresholdMs],
   );
 
   React.useEffect(() => {
