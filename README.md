@@ -1,39 +1,83 @@
 # invoice-app-client
-This is a React-Native front-end app for issuing invoices by merchants of small businesses.The app handles registration for merchants and supports adding items and customers.
-Once there are items and customers, merchants can choose to generate invoices to save or send as email.
-Emails include a pdf of the invoice with a payment url which opens a payment portal.
-You can find back-end code for this app on [invoice-app-backend](https://github.com/jKh98/invoice-app-backend).
 
-## Usage
-* Setup your environment if you never used react-native, checkout the [doc](https://reactnative.dev/docs/environment-setup)
-* Install react-native cli using `npm install -g react-native-cli`
-* Clone or download repository
-* Go into the main app directory
-* Install dependencies by running `npm install`
-* Run the application using `react-native run-android` for android or `react-native run-ios`for ios
+InvoiceAppClient is a frontend application for small-business merchants to manage invoices, customers, and items.
 
-## Dependencies
+This repository currently contains:
+- A mobile app built with Expo + React Native (root project)
+- A separate Next.js web app in `web-app/`
 
-* [NativeBase](https://github.com/GeekyAnts/NativeBase) for cross-platform UI elements.
-* [Redux](https://github.com/reduxjs/redux) as a state container.
-* [Redux-thunk](https://github.com/reduxjs/redux-thunk) as middleware for Redux.
-* [Redux-Form](https://github.com/redux-form/redux-form) to keep form state in store.
-* [react-native-router-flux](https://github.com/aksonov/react-native-router-flux) for routing between screens.
+## Features
+- Merchant authentication (login/sign-up)
+- Customer and item management
+- Invoice create/edit flows with line items
+- Invoice send flow (email/payment integration)
+- Profile management
 
+## Tech Stack (Mobile)
+- Expo 51
+- React Native 0.74
+- TypeScript
+- Redux Toolkit + RTK Query
+- react-hook-form + Zod
+- Tamagui
+- redux-persist
+- Sentry
 
-## Structure
+## Quick Start (Mobile App)
 
-  Inside the src folder:
-* `actions/` contains different functions that are dispatched to send payload from application to store.
-* `components/` contains different presentation and functional components.
-* `config/` contains Redux store configuration.
-* `pages/`contains pages or screens used in the application.
-* `reducers/` contains reducers that specify how application state changes in response to dispatched actions
-* `service/` contains api functions used to connect with back-end (Here you should modify the server url)
-* `utils/` contains general util functions for error handling and form validation
-* `Main.js` contains the root component that is called by App.js
+Prerequisites:
+- Node.js (LTS)
+- npm
+- Expo-compatible Android/iOS simulator or device
 
+Install and run:
+```bash
+npm install
+npm run start
+```
 
+Useful scripts:
+- `npm run android` - open Expo on Android
+- `npm run ios` - open Expo on iOS
+- `npm run web` - run Expo web build
+- `npm run typecheck` - run TypeScript checks
 
+## Quick Start (Next.js Web App)
 
+```bash
+cd web-app
+npm install
+npm run dev
+```
 
+Other web scripts:
+- `npm run build`
+- `npm run start`
+- `npm run lint`
+
+## Project Structure
+
+Top-level:
+- `src/` - mobile application source
+- `android/`, `ios/` - native projects
+- `web-app/` - Next.js web app
+- `packages/` - shared packages (`api-contracts`, `shared-api`, `shared-ui`, `shared-utils`)
+
+Mobile source (`src/`):
+- `components/` - reusable UI/navigation pieces
+- `pages/` - route-level screens
+- `store/` - Redux Toolkit store, slices, RTK Query APIs
+- `shared/` - shared forms, errors, observability, logger
+- `features/` - feature-level logic/components
+- `utils/`, `types/`, `config/`
+
+## API / Backend
+
+Backend repository:
+- https://github.com/jKh98/invoice-app-backend
+
+The frontend is aligned to shared API contracts in `packages/api-contracts` and shared API helpers in `packages/shared-api`.
+
+## Notes
+- This README reflects the current TypeScript + RTK architecture.
+- Legacy references to Redux Form and thunk-based action/reducer folders are intentionally removed from this document.

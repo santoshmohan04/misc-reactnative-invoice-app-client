@@ -1,0 +1,45 @@
+{
+  "extends": "./tsconfig.expo-base.json",
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@shared-api": ["./packages/shared-api/src/index.ts"],
+      "@shared-utils": ["./packages/shared-utils/src/index.ts"],
+      "@shared-contracts": ["./packages/api-contracts/src/index.ts"],
+      "@shared-ui": ["./packages/shared-ui/src/index.ts"],
+      "@config/*": ["./src/config/*"],
+      "@store/*": ["./src/store/*"],
+      "@types/*": ["./src/types/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@components/*": ["./src/components/*"],
+      "@services/*": ["./src/service/*"],
+      "@features/*": ["./src/features/*"]
+    }
+  },
+  "include": [
+    "App.tsx",
+    "index.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "tamagui.config.ts"
+  ],
+  "exclude": [
+    "web-app/**",
+    "__tests__/**",
+    "android/**",
+    "ios/**",
+    "node_modules/**"
+  ]
+}

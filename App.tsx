@@ -1,0 +1,70 @@
+import 'react-native-reanimated';
+import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { TamaguiProvider } from 'tamagui';
+import { store, persistor } from './src/store';
+import tamaguiConfig from './tamagui.config';
+import { initSentry } from './src/shared/observability/sentry';
+import {
+  startJsThreadFreezeMonitor,
+  trackAppStartup,
+} from './src/shared/observability/performance';
+import ErrorBoundary from './src/shared/errors/ErrorBoundary';
+import GlobalToastHost from './src/shared/errors/GlobalToastHost';
+import { logger } from './src/shared/logger';
+import RehydrationLoader from './src/shared/RehydrationLoader';
+import Main from './src/Main';
+
+const appStartedAt = performance.now();
+initSentry();
+startJsThreadFreezeMonitor(__DEV__ ? 1200 : 600);
+
+const App: React.FC = () => {
+  const slowRenderThresholdMs = __DEV__ ? 500 : 120;
+
+  const onRender = React.useCallback(
+    (
+      id: string,
+      phase: 'mount' | 'update' | 'nested-update',
+      actualDuration: number,
+    ) => {
+      if (__DEV__ && phase === 'mount') {
+        return;
+      }
+
+      if (actualDuration > slowRenderThresholdMs) {
+        logger.warn('Slow render detected', 'render_profiler', {
+          id,
+          phase,
+          actualDuration: Math.round(actualDuration),
+        });
+      }
+    },
+    [slowRenderThresholdMs],
+  );
+
+  React.useEffect(() => {
+    trackAppStartup(appStartedAt);
+  }, []);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+        <Provider store={store}>
+          <PersistGate loading={<RehydrationLoader />} persistor={persistor}>
+            <ErrorBoundary>
+              <GlobalToastHost />
+              <React.Profiler id="root-app" onRender={onRender}>
+                <Main />
+              </React.Profiler>
+            </ErrorBoundary>
+          </PersistGate>
+        </Provider>
+      </TamaguiProvider>
+    </GestureHandlerRootView>
+  );
+};
+
+export default App;
