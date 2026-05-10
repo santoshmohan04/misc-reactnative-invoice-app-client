@@ -9,7 +9,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "paths": {
       "@shared-api": ["./packages/shared-api/src/index.ts"],
       "@shared-utils": ["./packages/shared-utils/src/index.ts"],
@@ -26,9 +26,13 @@
     }
   },
   "include": [
+    "App.tsx",
+    "index.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
     "tamagui.config.ts"
   ],
   "exclude": [
