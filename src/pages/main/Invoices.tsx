@@ -41,7 +41,7 @@ const Invoices: React.FC = () => {
           ListEmptyComponent={
             <EmptyListPlaceHolder
               type="item"
-              message="No invoices found.\nPress the plus button to add new items."
+              message="No invoices found. Press the plus button to add new items."
             />
           }
           data={invoicesList}

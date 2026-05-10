@@ -6,6 +6,7 @@ import type { RootStackParamList } from '../../types';
 
 const environment = process.env.EXPO_PUBLIC_ENV ?? (process.env.NODE_ENV === 'production' ? 'production' : 'development');
 const release = `${Constants.expoConfig?.slug ?? 'invoice-app'}@${Constants.expoConfig?.version ?? '0.0.0'}`;
+const sentryDebug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
 
 export const reactNavigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true,
@@ -26,7 +27,7 @@ export const initSentry = (): void => {
     integrations: [reactNavigationIntegration as unknown as any],
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     profilesSampleRate: environment === 'production' ? 0.05 : 1.0,
-    debug: environment !== 'production',
+    debug: sentryDebug,
     sendDefaultPii: false,
     beforeSend(event) {
       if (event.request?.headers) {

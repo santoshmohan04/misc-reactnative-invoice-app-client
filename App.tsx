@@ -14,6 +14,7 @@ import {
 import ErrorBoundary from './src/shared/errors/ErrorBoundary';
 import GlobalToastHost from './src/shared/errors/GlobalToastHost';
 import { logger } from './src/shared/logger';
+import RehydrationLoader from './src/shared/RehydrationLoader';
 import Main from './src/Main';
 
 const appStartedAt = performance.now();
@@ -46,7 +47,7 @@ const App: React.FC = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
+          <PersistGate loading={<RehydrationLoader />} persistor={persistor}>
             <ErrorBoundary>
               <GlobalToastHost />
               <React.Profiler id="root-app" onRender={onRender}>

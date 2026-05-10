@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, Text } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Controller } from 'react-hook-form';
 import { Button, Text as TText } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useZodForm } from '../shared/forms/hooks/useZodForm';
 import { TextInputField } from '../shared/forms/fields/TextInputField';
-import { SelectField } from '../shared/forms/fields/SelectField';
 import profileSchema, { type ProfileFormData } from '../shared/validation/profileSchema';
 import InnerPageHeader from '../components/InnerPageHeader';
 import Loader from '../components/Loader';
@@ -100,13 +101,26 @@ const Profile: React.FC = () => {
             placeholder="Street address"
             rules={{ required: 'Address is required' }}
           />
-          <SelectField
+          <Controller
             control={control}
             name="base_currency"
-            label="Base Currency"
-            placeholder="Select currency"
             rules={{ required: 'Currency is required' }}
-            options={currencies.map((c: any) => ({ label: `${c.name} (${c.symbol})`, value: c._id }))}
+            render={({ field: { value, onChange } }) => (
+              <View style={styles.selectWrapper}>
+                <Text style={styles.selectLabel}>Base Currency</Text>
+                <View style={styles.pickerWrap}>
+                  <Picker
+                    selectedValue={String(value ?? '')}
+                    onValueChange={(currencyValue) => onChange(String(currencyValue ?? ''))}
+                    style={styles.picker}
+                  >
+                    {currencies.map((c: any) => (
+                      <Picker.Item key={String(c._id)} label={`${c.name} (${c.symbol})`} value={String(c._id)} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            )}
           />
 
           <Button onPress={handleSubmit(onSubmit)} style={styles.primaryButton}>
@@ -139,6 +153,17 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
   },
+  selectWrapper: { marginBottom: 12 },
+  selectLabel: { fontSize: 13, color: '#475569', marginBottom: 6, fontWeight: '500' },
+  pickerWrap: {
+    minHeight: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(15,23,42,0.12)',
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  picker: { minHeight: 40 },
   primaryButton: {
     marginTop: 12,
     backgroundColor: '#2563eb',

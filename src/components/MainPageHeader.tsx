@@ -16,6 +16,7 @@ import {
 } from '../store/apis/dataApi';
 import { useGetCurrentUserQuery } from '../store/apis/authApi';
 import { handleApiError, showSuccessToast } from '../shared/errors/apiErrorHandler';
+import { useAuthToken } from '../store/hooks';
 
 interface MainPageHeaderProps {
   title?: string;
@@ -27,12 +28,13 @@ interface MainPageHeaderProps {
  */
 const MainPageHeader: React.FC<MainPageHeaderProps> = ({ title = '' }) => {
   const navigation = useNavigation();
+  const token = useAuthToken();
 
   // RTK Query hooks for data
   const invoicesQuery = useGetInvoicesQuery();
   const customersQuery = useGetCustomersQuery();
   const itemsQuery = useGetItemsQuery();
-  const userQuery = useGetCurrentUserQuery();
+  const userQuery = useGetCurrentUserQuery(undefined, { skip: !token });
 
   /**
    * Manually trigger refetch of all queries
@@ -42,7 +44,7 @@ const MainPageHeader: React.FC<MainPageHeaderProps> = ({ title = '' }) => {
     try {
       // Trigger refetch for all queries
       const results = await Promise.all([
-        userQuery.refetch(),
+        token ? userQuery.refetch() : Promise.resolve({} as any),
         invoicesQuery.refetch(),
         customersQuery.refetch(),
         itemsQuery.refetch(),
@@ -76,7 +78,7 @@ const MainPageHeader: React.FC<MainPageHeaderProps> = ({ title = '' }) => {
       <Button
         chromeless
         onPress={handleNavigateToProfile}
-        accessibilityLabel="Navigate to profile"
+        aria-label="Navigate to profile"
       >
         <Ionicons name="person-outline" size={22} color="#0f172a" />
       </Button>
@@ -86,7 +88,7 @@ const MainPageHeader: React.FC<MainPageHeaderProps> = ({ title = '' }) => {
         onPress={handleRefresh}
         disabled={isRefreshing}
         opacity={isRefreshing ? 0.5 : 1}
-        accessibilityLabel="Refresh data"
+        aria-label="Refresh data"
       >
         <Ionicons
           name={isRefreshing ? 'hourglass' : 'refresh'}

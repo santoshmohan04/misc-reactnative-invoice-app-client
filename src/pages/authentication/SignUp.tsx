@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -13,28 +14,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from 'tamagui';
-import { registerSchema, type RegisterFormData } from '@store/../types/schemas';
+import { registerSchema, type RegisterFormData } from '@types/schemas';
 import { useRegisterMutation } from '@store/apis/authApi';
 import { useAppDispatch, useAuth } from '@store/hooks';
 import { setError as setAuthError } from '@store/slices/authSlice';
-
-type RootStackParamList = {
-  Login: undefined;
-  SignUp: undefined;
-  Main: undefined;
-};
-
-type SignUpScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'SignUp'
->;
+import type { RootStackParamList } from '@types/navigation';
 
 /**
  * Modern SignUp component using react-hook-form
  * Replaces legacy redux-form SignUp.js
  */
 function SignUp() {
-  const navigation = useNavigation<SignUpScreenNavigationProp>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { isAuthenticated, error: authError } = useAuth();
   
@@ -57,7 +48,7 @@ function SignUp() {
   // Redirect to main screen if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigation.navigate('Main');
+      navigation.replace('home');
     }
   }, [isAuthenticated, navigation]);
 
@@ -76,7 +67,7 @@ function SignUp() {
   };
 
   const handleLoginPress = () => {
-    navigation.navigate('Login');
+    navigation.navigate('login');
   };
 
   const apiErrorMessage =
@@ -111,7 +102,14 @@ function SignUp() {
               name="name"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <Text style={styles.input}>{value}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Full name"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
                   {errors.name && (
                     <Text style={styles.fieldError}>
                       {errors.name.message}
@@ -130,7 +128,16 @@ function SignUp() {
               name="email"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <Text style={styles.input}>{value}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="emailAddress"
+                  />
                   {errors.email && (
                     <Text style={styles.fieldError}>
                       {errors.email.message}
@@ -149,7 +156,16 @@ function SignUp() {
               name="password"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <Text style={styles.input}>{value}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Password"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                  />
                   {errors.password && (
                     <Text style={styles.fieldError}>
                       {errors.password.message}
@@ -168,7 +184,16 @@ function SignUp() {
               name="confirmPassword"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <Text style={styles.input}>{value}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Confirm password"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                  />
                   {errors.confirmPassword && (
                     <Text style={styles.fieldError}>
                       {errors.confirmPassword.message}
@@ -224,10 +249,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0px 2px 6px rgba(0,0,0,0.1)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        }),
     elevation: 3,
   },
   title: {

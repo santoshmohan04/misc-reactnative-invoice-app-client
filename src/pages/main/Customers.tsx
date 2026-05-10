@@ -28,7 +28,7 @@ const Customers: React.FC = () => {
           ListEmptyComponent={
             <EmptyListPlaceHolder
               type="item"
-              message="No customers found.\nPress the plus button to add new customers."
+              message="No customers found. Press the plus button to add new customers."
             />
           }
           data={customersList}

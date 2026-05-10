@@ -1,22 +1,28 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { Button, Text, XStack } from 'tamagui';
-import { Actions } from '../utils/NavigationService';
+import { navigationRef, Actions } from '../utils/NavigationService';
 
 interface InnerPageHeaderProps {
   title: string;
 }
 
 const InnerPageHeader: React.FC<InnerPageHeaderProps> = ({ title }) => {
+  const navigation = useNavigation();
+
   const goBack = (): void => {
-    Actions.pop();
-    Actions.refresh();
+    if (navigationRef.isReady() && navigationRef.canGoBack()) {
+      navigationRef.goBack();
+      return;
+    }
+    Actions.home();
   };
 
   return (
     <XStack style={styles.header}>
-      <Button chromeless onPress={goBack}>
+      <Button chromeless onPress={goBack} accessibilityLabel="Go back">
         <Ionicons name="arrow-back" size={22} color="#0f172a" />
       </Button>
       <Text style={styles.title}>{title}</Text>

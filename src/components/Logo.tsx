@@ -20,6 +20,7 @@ const Logo: React.FC<LogoProps> = ({ size = 120, textSize = 22 }) => {
       <Image
         style={[styles.logo, { width: size, height: size }]}
         source={require('../assets/images/react-logo.png')}
+        resizeMode="contain"
         accessibilityLabel="Invoice App Logo"
       />
       <Text style={[styles.logoText, { fontSize: textSize }]}>Invoice App</Text>
@@ -40,7 +41,6 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: 'center',
   },
   logo: {
-    resizeMode: 'contain',
   },
   logoText: {
     marginVertical: 15,
