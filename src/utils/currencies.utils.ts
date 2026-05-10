@@ -1,13 +1,27 @@
+export interface Currency {
+    symbol: string;
+    name: string;
+    symbol_native: string;
+    decimal_digits: number;
+    rounding: number;
+    _id: string;
+    name_plural: string;
+}
+
 /**
  * gets currency symbol by id
- *
- * @param id
- * @returns {string}
  */
-export const getCurrency = (id) => {
-    if (id) {
-        return currencies.find((c) => c._id === id).symbol_native;
+export const getCurrency = (id?: string): string | undefined => {
+    if (!id) {
+        return undefined;
     }
+
+    const currency = currencies.find((c) => c._id === id);
+    if (!currency) {
+        return undefined;
+    }
+
+    return currency.symbol_native;
 };
 
 /**
@@ -15,7 +29,7 @@ export const getCurrency = (id) => {
  *
  * @type {({symbol: string, name_plural: string, symbol_native: string, decimal_digits: number, name: string, rounding: number, _id: string}|{symbol: string, name_plural: string, symbol_native: string, decimal_digits: number, name: string, rounding: number, _id: string}|{symbol: string, name_plural: string, symbol_native: string, decimal_digits: number, name: string, rounding: number, _id: string}|{symbol: string, name_plural: string, symbol_native: string, decimal_digits: number, name: string, rounding: number, _id: string}|{symbol: string, name_plural: string, symbol_native: string, decimal_digits: number, name: string, rounding: number, _id: string})[]}
  */
-export const currencies = [
+export const currencies: Currency[] = [
     {
         'symbol': '$',
         'name': 'US Dollar',
