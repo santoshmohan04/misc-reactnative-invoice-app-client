@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1c313a"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.invoiceapp.client"
@@ -24,12 +26,16 @@
       "package": "com.invoiceapp.client"
     },
     "extra": {
-      "baseUrl": "http://192.168.1.103:3333",
-      "webBaseUrl": "http://localhost:3333",
       "eas": {
         "projectId": "your-eas-project-id"
       }
     },
-    "plugins": ["expo-secure-store", "@sentry/react-native/expo"]
+    "plugins": [
+      "expo-secure-store",
+      "@sentry/react-native/expo",
+      "@react-native-community/datetimepicker",
+      "@sentry/react-native",
+      "expo-font"
+    ]
   }
 }

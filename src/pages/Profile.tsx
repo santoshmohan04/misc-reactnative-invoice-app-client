@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, View, Text } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, Text, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Controller } from 'react-hook-form';
 import { Button, Text as TText } from 'tamagui';
@@ -66,23 +66,28 @@ const Profile: React.FC = () => {
     [updateUser],
   );
 
-  const onLogout = useCallback(async () => {
-    Alert.alert('Logout', 'Are you sure?', [
-      { text: 'Cancel', onPress: () => {} },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logoutUser().unwrap();
-            navigation.reset({ index: 0, routes: [{ name: 'login' }] });
-          } catch (err) {
-            Alert.alert('Error', 'Failed to logout');
-          }
-        },
-      },
-    ]);
-  }, [logoutUser, navigation]);
+  const onLogout = useCallback(() => {
+    const performLogout = async () => {
+      try {
+        await logoutUser().unwrap();
+      } catch (err) {
+        // Local logout is already handled by authApi's onQueryStarted catch block.
+        // We suppress the UI alert here so the user isn't trapped if the network is down.
+        console.warn('Logout API error:', err);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        performLogout();
+      }
+    } else {
+      Alert.alert('Logout', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: performLogout },
+      ]);
+    }
+  }, [logoutUser]);
 
   return (
     <View style={styles.container}>

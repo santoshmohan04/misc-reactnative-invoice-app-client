@@ -6,9 +6,13 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+// 10.0.2.2 is the special alias to your host loopback interface for Android Emulators
+const DEV_API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3333' : 'http://localhost:3333';
+
+
 const ENV = {
   dev: {
-    apiUrl: 'http://localhost:3333',
+    apiUrl: DEV_API_URL,
     apiTimeout: 30000,
   },
   staging: {
