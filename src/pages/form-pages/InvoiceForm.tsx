@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import invoiceSchema, { type Invoice } from '../../types/schemas/invoice.schema';
 import InvoiceItemRow from '@features/invoices/components/InvoiceItemRow';
+import { useInvoiceExport } from '@features/invoices/hooks/useInvoiceExport';
 import { calculateGrandTotal } from '@features/invoices/utils/calculations';
 import { useUpsertInvoiceMutation, useGetCustomersQuery, useGetItemsQuery } from '@store/apis/dataApi';
 import Loader from '@components/Loader';
@@ -28,17 +29,28 @@ const FIELD_STYLE = {
 type FormValues = Invoice & { issued?: string | Date; due?: string | Date };
 const OBJECT_ID_REGEX = /^[a-fA-F0-9]{24}$/;
 
+// Unique, readable number (INV-YYYYMMDD-HHmmss); the backend upserts by number, so it must not repeat.
+const generateInvoiceNumber = (): string => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `INV-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+};
+
+const FieldError: React.FC<{ message?: string }> = ({ message }) =>
+  message ? <Text style={styles.fieldError}>{message}</Text> : null;
+
 const InvoiceForm: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const routeParams = (route.params as any) ?? {};
   const invoice = routeParams.invoice as Invoice | undefined;
-  const newNumber = routeParams.newNumber as string | undefined;
+  const generatedNumber = useMemo(generateInvoiceNumber, []);
   const isEditMode = Boolean(invoice?._id);
   const draftKey = DRAFT_KEY(invoice?._id);
 
   const { data: customersData = [] } = useGetCustomersQuery();
   const { data: itemsData = [] } = useGetItemsQuery();
+  const { print, downloadPdf } = useInvoiceExport();
 
   const formatDate = (d: any) => {
     if (!d) return '';
@@ -48,8 +60,9 @@ const InvoiceForm: React.FC = () => {
 
   const initialValues = useMemo<FormValues>(() => ({
     _id: invoice?._id,
-    customer: typeof invoice?.customer === 'string' ? invoice.customer : (invoice?.customer as { _id?: string } | undefined)?._id,
-    number: invoice?.number ?? newNumber ?? `INV${Date.now()}`,
+    customer:
+      (typeof invoice?.customer === 'string' ? invoice.customer : (invoice?.customer as { _id?: string } | undefined)?._id) ?? '',
+    number: invoice?.number ?? generatedNumber,
     issued: invoice?.issued ? formatDate(invoice.issued) : formatDate(new Date()),
     due: invoice?.due ? formatDate(invoice.due) : formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
     notes: invoice?.notes ?? '',
@@ -57,18 +70,19 @@ const InvoiceForm: React.FC = () => {
       invoice?.items?.map((it) => ({
         ...it,
         item:
-          typeof it.item === 'string'
+          (typeof it.item === 'string'
             ? it.item
             : (it.item as { _id?: string; id?: string } | undefined)?._id ??
-              (it.item as { _id?: string; id?: string } | undefined)?.id,
+              (it.item as { _id?: string; id?: string } | undefined)?.id) ?? '',
         quantity: Number(it.quantity ?? 0),
         price: Number(it.price ?? (it.subtotal ?? 0)),
         discount: Number(it.discount ?? 0),
       })) ?? [{ item: '', quantity: 1, price: 0, discount: 0 }],
-  }), [invoice, newNumber]);
+  }), [invoice, generatedNumber]);
 
   const { control, handleSubmit, watch, reset, setValue, formState } = useForm<FormValues>({
     resolver: zodResolver(invoiceSchema),
+    mode: 'onTouched',
     defaultValues: initialValues,
   });
 
@@ -279,26 +293,28 @@ const InvoiceForm: React.FC = () => {
       <InnerPageHeader title="Invoice" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          <Text style={styles.label}>Invoice Number</Text>
+          <Text style={styles.label}>Invoice Number (auto-generated)</Text>
           <Controller
             control={control}
             name="number"
-            render={({ field: { onChange, value } }) => (
-              <TextInput style={FIELD_STYLE} value={value} onChangeText={onChange} placeholder="INV001" />
+            render={({ field: { value } }) => (
+              <TextInput style={[FIELD_STYLE, styles.readOnly]} value={value} editable={false} selectTextOnFocus={false} />
             )}
           />
+          <FieldError message={formState.errors.number?.message} />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Customer</Text>
+          <Text style={styles.label}>Customer *</Text>
           <Controller
             control={control}
             name="customer"
-            render={({ field: { onChange, value } }) => (
-              <View style={styles.pickerWrap}>
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View style={[styles.pickerWrap, formState.errors.customer && styles.invalid]}>
                 <Picker
                   selectedValue={typeof value === 'string' ? value : ''}
                   onValueChange={(selectedValue) => onChange(String(selectedValue ?? ''))}
+                  onBlur={onBlur}
                   style={styles.picker}
                 >
                   <Picker.Item label="Select customer" value="" />
@@ -309,31 +325,47 @@ const InvoiceForm: React.FC = () => {
               </View>
             )}
           />
+          <FieldError message={formState.errors.customer?.message} />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Issued Date</Text>
+          <Text style={styles.label}>Issued Date *</Text>
           <Controller
             control={control}
             name="issued"
-            render={({ field: { onChange, value } }) => (
-              <TextInput style={FIELD_STYLE} value={String(value ?? '')} onChangeText={onChange} placeholder="YYYY-MM-DD" />
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[FIELD_STYLE, formState.errors.issued && styles.invalid]}
+                value={String(value ?? '')}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="YYYY-MM-DD"
+              />
             )}
           />
+          <FieldError message={formState.errors.issued?.message} />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Due Date</Text>
+          <Text style={styles.label}>Due Date *</Text>
           <Controller
             control={control}
             name="due"
-            render={({ field: { onChange, value } }) => (
-              <TextInput style={FIELD_STYLE} value={String(value ?? '')} onChangeText={onChange} placeholder="YYYY-MM-DD" />
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[FIELD_STYLE, formState.errors.due && styles.invalid]}
+                value={String(value ?? '')}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="YYYY-MM-DD"
+              />
             )}
           />
+          <FieldError message={formState.errors.due?.message} />
         </View>
 
         <Text style={styles.sectionLabel}>Items</Text>
+        <FieldError message={(formState.errors.items as any)?.message ?? (formState.errors.items as any)?.root?.message} />
         {fields.map((f, i) => (
           <View key={f.id} style={styles.itemRowWrap}>
             <InvoiceItemRow control={control} index={i} name="items" itemOptions={itemOptions} onSelectItem={handleSelectItem} />
@@ -355,6 +387,17 @@ const InvoiceForm: React.FC = () => {
           <Text style={styles.totalLine}>Tax: ${computeTotals.tax.toFixed(2)}</Text>
           <Text style={[styles.totalLine, { fontWeight: '700', fontSize: 16 }]}>Total: ${computeTotals.total.toFixed(2)}</Text>
         </View>
+
+        {isEditMode && invoice ? (
+          <View style={styles.exportRow}>
+            <Button style={styles.exportButton} onPress={() => print(invoice)}>
+              <TText>Print</TText>
+            </Button>
+            <Button style={styles.exportButton} onPress={() => downloadPdf(invoice)}>
+              <TText>Download PDF</TText>
+            </Button>
+          </View>
+        ) : null}
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -381,7 +424,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
   },
-  picker: { minHeight: 40 },
+  picker: {
+    minHeight: 40,
+    ...(Platform.OS === 'web'
+      ? ({ borderWidth: 0, outlineStyle: 'none', backgroundColor: 'transparent', paddingHorizontal: 8, color: '#0f172a' } as any)
+      : {}),
+  },
+  exportRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  exportButton: { flex: 1 },
+  readOnly: { backgroundColor: '#f1f5f9', color: '#64748b' },
+  invalid: { borderColor: '#f32013' },
+  fieldError: { color: '#f32013', fontSize: 12, marginTop: 4 },
   sectionLabel: { fontSize: 14, fontWeight: '600', marginVertical: 10, color: '#1e293b' },
   itemRowWrap: { marginBottom: 12, backgroundColor: '#fff', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
   rowActions: { marginTop: 8, alignItems: 'flex-end' },

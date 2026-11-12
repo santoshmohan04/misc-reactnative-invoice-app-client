@@ -1,5 +1,4 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 /**
  * Metro configuration for Expo.
@@ -8,9 +7,9 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
 const config = getDefaultConfig(__dirname);
 
 // Reduce file crawling and watcher load by excluding the embedded Next.js app.
-config.resolver.blockList = exclusionList([
+config.resolver.blockList = [
 	/web-app\/.*$/,
 	/web-app\\.*$/,
-]);
+];
 
 module.exports = config;

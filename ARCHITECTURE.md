@@ -442,27 +442,33 @@ export const apiSlice = createApi({
 });
 ```
 
-### Redux (Mobile) - Pre-RTK Migration
+### Redux (Mobile)
 
-```javascript
-// src/store/reducers/auth.reducer.js
-const initialState = {
-  user: null,
-  token: null,
-  refreshToken: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-};
+The mobile app uses Redux Toolkit + RTK Query (`src/store/index.ts`, `src/store/slices/`, `src/store/apis/`). The legacy thunk/reducer folders were removed.
 
-// Actions dispatched from src/actions/auth.actions.js thunks
-```
+- The auth reducer is wrapped with `persistReducer({ key: 'auth', storage: AsyncStorage })` (no whitelist), so login survives a refresh.
+- `authSlice.setCredentials` keeps existing tokens when none are supplied (e.g. profile updates).
+
+### Mobile Forms & Validation
+
+- Forms use react-hook-form + zod (`mode: 'onTouched'`) with inline errors and red borders on invalid fields.
+- Schemas mirror the backend Joi rules: `src/types/schemas.ts` (login: trimmed email + non-empty password; register: name ≥4, email, password ≥8, phone, address, base_currency, optional company, confirmPassword UI-only) and `src/types/schemas/invoice.schema.ts`.
+- Item: name 4–100, price ≥0, description ≤500. Customer: name 2–100, email, phone 8–20, address 10–500.
+- Invoice: number is auto-generated (`INV-YYYYMMDD-HHmmss`) and read-only; customer/item are ObjectIds; dates `YYYY-MM-DD` with due ≥ issued; ≥1 item with integer quantity ≥1.
+- Path alias `@app-types/*` → `src/types/*` (the `@types/*` name is reserved by TypeScript).
+
+### Invoice Print / PDF
+
+- `src/utils/invoicePdf.ts` builds the invoice HTML. Print: hidden iframe on web, `expo-print` on mobile. Download: `html2pdf.js` on web, `printToFileAsync` + `expo-sharing` on mobile.
+- `useInvoiceExport` (`src/features/invoices/hooks/`) resolves customer, item names, merchant and currency; actions are available in `ListView` rows (`actions` prop) and in the saved-invoice `InvoiceForm`.
 
 ---
 
 ## API Contract Layer
 
 ### Endpoint Definitions
+
+> Note: the backend registers `POST /<resource>/create`, `PUT /<resource>/:id`, `GET /<resource>/all` (and the same under `/api`). The mobile `dataApi` uses `create` and `PUT /:id` for items and customers; the `EDIT` constants below are legacy and not used for those resources. Illustrative shape (actual file uses lowercase keys):
 
 ```typescript
 // packages/api-contracts/src/endpoints.ts

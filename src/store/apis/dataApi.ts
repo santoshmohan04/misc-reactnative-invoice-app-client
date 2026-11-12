@@ -111,13 +111,12 @@ export const dataApi = createApi({
       providesTags: [{ type: 'Customer', id: 'LIST' }],
     }),
 
-    /** Create (no _id) or update (with _id) a customer via POST /customer/edit */
+    /** Create (no _id) via POST /customer/create, or update (with _id) via PUT /customer/:id */
     upsertCustomer: builder.mutation<any, any>({
-      query: (body) => ({
-        url: API_ENDPOINTS.customer.edit,
-        method: 'POST',
-        body,
-      }),
+      query: ({ _id, ...body }) =>
+        _id
+          ? { url: `/customer/${_id}`, method: 'PUT', body }
+          : { url: API_ENDPOINTS.customer.create, method: 'POST', body },
       transformResponse: (response: any) => unwrapSuccessPayload(response),
       async onQueryStarted(_, { queryFulfilled }) {
         try {
@@ -141,13 +140,12 @@ export const dataApi = createApi({
       providesTags: [{ type: 'Item', id: 'LIST' }],
     }),
 
-    /** Create (no _id) or update (with _id) an item via POST /item/edit */
+    /** Create (no _id) via POST /item/create, or update (with _id) via PUT /item/:id */
     upsertItem: builder.mutation<any, any>({
-      query: (body) => ({
-        url: API_ENDPOINTS.item.edit,
-        method: 'POST',
-        body,
-      }),
+      query: ({ _id, ...body }) =>
+        _id
+          ? { url: `/item/${_id}`, method: 'PUT', body }
+          : { url: API_ENDPOINTS.item.create, method: 'POST', body },
       transformResponse: (response: any) => unwrapSuccessPayload(response),
       async onQueryStarted(_, { queryFulfilled }) {
         try {

@@ -44,10 +44,10 @@ Web (Next.js):
 
 ## Mobile App (Root package)
 Core:
-- Expo `~51.0.0`
-- React Native `0.74.5`
-- React `18.2.0`
-- TypeScript `~5.3.3`
+- Expo `~54.0.0`
+- React Native `0.81.5`
+- React `19.1.0`
+- TypeScript `~5.9.2`
 
 State and data:
 - `@reduxjs/toolkit`
@@ -57,8 +57,14 @@ State and data:
 
 Forms and validation:
 - `react-hook-form`
-- `zod`
+- `zod` (v4: use `{ error: '...' }` params)
 - `@hookform/resolvers`
+- Schemas live in `src/types/schemas.ts` (login/register) and `src/types/schemas/invoice.schema.ts`; they mirror the backend Joi validations. Imported via the `@app-types/*` alias.
+
+Printing / PDF:
+- `expo-print`, `expo-sharing` (mobile), `html2pdf.js` (web download)
+- `src/utils/invoicePdf.ts` builds the invoice HTML; web print uses a hidden iframe (expo-print on web would print the current screen)
+- `src/features/invoices/hooks/useInvoiceExport.ts` maps a saved invoice to document data
 
 UI and platform:
 - `tamagui`
@@ -144,7 +150,7 @@ Observability:
 
 ## Mobile State Architecture
 - Redux Toolkit store in `src/store/index.ts`.
-- Persisted auth via `redux-persist` (whitelist: `auth`) using AsyncStorage in current store config.
+- Auth slice is persisted via `redux-persist` (`persistReducer` with `key: 'auth'` wrapping the auth reducer, no whitelist) using AsyncStorage, so sessions survive a refresh. `setCredentials` keeps existing tokens when none are supplied.
 - UI slices include `customerUI`, `invoiceUI`, `itemUI`, and `user`.
 - Server state handled by RTK Query (`authApi`, `dataApi`).
 
@@ -169,6 +175,9 @@ Observability:
 - RTK Query endpoints in `src/store/apis/` are active.
 - `authApi` includes token-refresh flow and concurrency control.
 - `dataApi` serves invoices/customers/items queries and mutations.
+- Items and customers: create via `POST /<resource>/create`, update via `PUT /<resource>/:id` (`_id` stripped from the body). Invoices still use `/invoice/edit` (not yet verified against the backend invoice routes).
+- Base URL comes from `EXPO_PUBLIC_API_URL` (`.env`, default `http://localhost:3333`).
+- Sign-up sends `name, email, password, phone, address, base_currency` (+ optional `company`); `confirmPassword` is UI-only.
 
 ## Web API Layer
 - RTK Query API in `web-app/src/store/apiSlice.ts`.

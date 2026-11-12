@@ -12,12 +12,8 @@ import type { Customer, RootStackParamList } from '../../types';
 type CustomerFormValues = {
   name: string;
   email: string;
-  company: string;
   phone: string;
-  mobile: string;
-  address_1: string;
-  address_2: string;
-  address_3: string;
+  address: string;
 };
 
 type FormFieldProps = {
@@ -51,7 +47,11 @@ const FormField: React.FC<FormFieldProps> = ({ label, control, name, rules, inpu
       <View style={styles.fieldWrap}>
         {label ? <Text style={styles.label}>{label}</Text> : null}
         <TextInput
-          style={FIELD_STYLE}
+          style={[
+            FIELD_STYLE,
+            inputProps?.multiline && { minHeight: 80, paddingTop: 10, textAlignVertical: 'top' },
+            error && { borderColor: '#f32013' },
+          ]}
           value={value ?? ''}
           onChangeText={onChange}
           onBlur={onBlur}
@@ -72,27 +72,22 @@ const CustomerForm: React.FC = () => {
   const [upsertCustomer, { isLoading }] = useUpsertCustomerMutation();
 
   const { control, handleSubmit } = useForm<CustomerFormValues>({
+    mode: 'onTouched',
     defaultValues: {
       name: customer?.name ?? '',
       email: customer?.email ?? '',
-      company: customer?.company ?? '',
       phone: customer?.phone ?? '',
-      mobile: customer?.mobile ?? '',
-      address_1: customer?.addresses?.[0] ?? '',
-      address_2: customer?.addresses?.[1] ?? '',
-      address_3: customer?.addresses?.[2] ?? '',
+      address: customer?.address ?? customer?.addresses?.filter(Boolean).join(', ') ?? '',
     },
   });
 
   const onSubmit = async (values: CustomerFormValues): Promise<void> => {
     try {
       const payload = {
-        name: values.name,
-        email: values.email,
-        company: values.company,
-        phone: values.phone,
-        mobile: values.mobile,
-        addresses: [values.address_1, values.address_2, values.address_3].filter(Boolean),
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        address: values.address.trim(),
         ...(customer?._id && { _id: customer._id }),
       };
       await upsertCustomer(payload).unwrap();
@@ -113,53 +108,61 @@ const CustomerForm: React.FC = () => {
             label="Customer Name *"
             control={control}
             name="name"
-            rules={{ required: 'Name is required', minLength: { value: 2, message: 'At least 2 characters' } }}
+            rules={{
+              validate: (value: string) => {
+                const len = value.trim().length;
+                if (len < 1) return 'Customer name is required';
+                if (len < 2) return 'Customer name must be at least 2 characters';
+                if (len > 100) return 'Customer name cannot exceed 100 characters';
+                return true;
+              },
+            }}
             inputProps={{ placeholder: 'Customer Name', keyboardType: 'default' }}
           />
           <FormField
-            label="Email"
+            label="Email *"
             control={control}
             name="email"
-            rules={{ pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email' } }}
+            rules={{
+              validate: (value: string) => {
+                const v = value.trim();
+                if (!v) return 'Email is required';
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Please provide a valid email address';
+              },
+            }}
             inputProps={{ placeholder: 'Email', keyboardType: 'email-address', autoCapitalize: 'none' }}
           />
           <FormField
-            label="Company"
-            control={control}
-            name="company"
-            inputProps={{ placeholder: 'Company', keyboardType: 'default' }}
-          />
-          <FormField
-            label="Phone"
+            label="Phone *"
             control={control}
             name="phone"
+            rules={{
+              validate: (value: string) => {
+                const len = value.trim().length;
+                if (len < 1) return 'Phone number is required';
+                if (len < 8) return 'Phone number must be at least 8 characters';
+                if (len > 20) return 'Phone number cannot exceed 20 characters';
+                return true;
+              },
+            }}
             inputProps={{ placeholder: 'Phone', keyboardType: 'phone-pad' }}
-          />
-          <FormField
-            label="Mobile"
-            control={control}
-            name="mobile"
-            inputProps={{ placeholder: 'Mobile', keyboardType: 'phone-pad' }}
           />
         </View>
         <View style={styles.card}>
           <FormField
-            label="Address Line 1"
+            label="Address *"
             control={control}
-            name="address_1"
-            inputProps={{ placeholder: 'Address 1', keyboardType: 'default' }}
-          />
-          <FormField
-            label="Address Line 2"
-            control={control}
-            name="address_2"
-            inputProps={{ placeholder: 'Address 2', keyboardType: 'default' }}
-          />
-          <FormField
-            label="Address Line 3"
-            control={control}
-            name="address_3"
-            inputProps={{ placeholder: 'Address 3', keyboardType: 'default' }}
+            name="address"
+            rules={{
+              validate: (value: string) => {
+                const len = value.trim().length;
+                if (len < 1) return 'Address is required';
+                if (len < 10) return 'Address must be at least 10 characters';
+                if (len > 500) return 'Address cannot exceed 500 characters';
+                return true;
+              },
+            }}
+            inputProps={{ placeholder: 'Address', keyboardType: 'default', multiline: true, numberOfLines: 3 }}
           />
         </View>
         <View style={styles.bottomSpacer} />

@@ -9,14 +9,18 @@ This repository currently contains:
 ## Features
 - Merchant authentication (login/sign-up)
 - Customer and item management
-- Invoice create/edit flows with line items
+- Invoice create/edit flows with line items and an auto-generated invoice number (`INV-YYYYMMDD-HHmmss`)
+- Print and Download PDF for invoices (list rows and saved-invoice form) on web and mobile
 - Invoice send flow (email/payment integration)
 - Profile management
+- Form validation in the UI aligned with the backend Joi rules (login, sign-up, item, customer, invoice)
 
 ## Tech Stack (Mobile)
-- Expo 51
-- React Native 0.74
-- TypeScript
+- Expo 54
+- React Native 0.81
+- React 19
+- TypeScript 5.9
+- `expo-print`, `expo-sharing` (mobile print / PDF share) and `html2pdf.js` (web PDF download)
 - Redux Toolkit + RTK Query
 - react-hook-form + Zod
 - Tamagui
@@ -30,11 +34,20 @@ Prerequisites:
 - npm
 - Expo-compatible Android/iOS simulator or device
 
+Configure the backend URL in `.env` (the backend runs on port 3333):
+```
+EXPO_PUBLIC_API_URL=http://localhost:3333
+```
+Use your machine's LAN IP for a physical phone, or `http://10.0.2.2:3333` for the Android emulator.
+
 Install and run:
 ```bash
 npm install
 npm run start
 ```
+
+After changing `.env`, `tsconfig.json` path aliases or `app.json`, restart with a clean cache: `npx expo start --web -c`.
+The `@app-types/*` alias is used for `src/types/*` (`@types/*` is reserved by TypeScript).
 
 Useful scripts:
 - `npm run android` - open Expo on Android
@@ -75,6 +88,8 @@ Mobile source (`src/`):
 
 Backend repository:
 - https://github.com/jKh98/invoice-app-backend
+
+Create routes are `POST /item/create` and `POST /customer/create`; updates are `PUT /item/:id` and `PUT /customer/:id`.
 
 The frontend is aligned to shared API contracts in `packages/api-contracts` and shared API helpers in `packages/shared-api`.
 
