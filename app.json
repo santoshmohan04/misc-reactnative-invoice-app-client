@@ -33,7 +33,7 @@
     "plugins": [
       "expo-secure-store",
       "@sentry/react-native/expo",
-      "@react-native-community/datetimepicker",
+      "@react-native-community/datetimepicker/app.plugin.js",
       "@sentry/react-native",
       "expo-font"
     ]

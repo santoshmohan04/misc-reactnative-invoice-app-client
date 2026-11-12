@@ -19,12 +19,12 @@ import { dataApi } from './apis/dataApi';
 
 /**
  * Redux persist configuration
- * Saves auth state to AsyncStorage for offline access
+ * Persists the auth slice only (not API cache). persistReducer wraps the auth
+ * reducer directly, so its whitelist would refer to auth's own keys, not 'auth'.
  */
 const persistConfig = {
-  key: 'root',
+  key: 'auth',
   storage: AsyncStorage,
-  whitelist: ['auth'], // Only persist auth state, not API cache
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authSlice);

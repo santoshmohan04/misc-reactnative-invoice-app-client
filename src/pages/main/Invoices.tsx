@@ -12,6 +12,7 @@ import { formatCurrency } from '../../utils/redux.form.utils';
 import { zeroPad } from '../../utils/general.utils';
 import { useGetInvoicesQuery, useGetCustomersQuery } from '../../store/apis/dataApi';
 import { useAuthUser } from '../../store/hooks';
+import { useInvoiceExport } from '../../features/invoices/hooks/useInvoiceExport';
 import type { Customer, Invoice } from '../../types';
 
 type InvoiceRecord = Invoice & { customer?: string };
@@ -20,6 +21,7 @@ type CustomerRecord = Customer & { total?: number; number_invoices?: number };
 const Invoices: React.FC = () => {
   const user = useAuthUser();
   const currency = getCurrency(user?.base_currency);
+  const { print, downloadPdf } = useInvoiceExport();
 
   const { data: invoicesData = [], isLoading, refetch } = useGetInvoicesQuery();
   const { data: customersData = [] } = useGetCustomersQuery();
@@ -54,6 +56,10 @@ const Invoices: React.FC = () => {
               right={formatCurrency(invoice.total, currency)}
               rightSub={moment(invoice.issued).format('DD/MM/YYYY')}
               handleClickEvent={() => Actions.invoiceForm({ invoice })}
+              actions={[
+                { label: 'Print', onPress: () => print(invoice) },
+                { label: 'Download PDF', onPress: () => downloadPdf(invoice) },
+              ]}
             />
           )}
           keyExtractor={(item, index) => item._id || index.toString()}

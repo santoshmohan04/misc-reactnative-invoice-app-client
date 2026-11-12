@@ -7,30 +7,38 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   email: z
     .string()
+    .trim()
     .min(1, 'Email is required')
     .email('Invalid email format'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+  password: z.string().trim().min(1, 'Password is required'),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 
+export const BASE_CURRENCIES = ['USD', 'INR', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY', 'SGD', 'AED'] as const;
+
 export const registerSchema = z.object({
   name: z
     .string()
+    .trim()
     .min(1, 'Name is required')
-    .min(2, 'Name must be at least 2 characters'),
+    .min(4, 'Name must be at least 4 characters'),
   email: z
     .string()
+    .trim()
     .min(1, 'Email is required')
+    .min(6, 'Email must be at least 6 characters')
     .email('Invalid email format'),
   password: z
     .string()
+    .trim()
     .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string().min(1, 'Password confirmation is required'),
+  phone: z.string().trim().min(1, 'Phone is required'),
+  address: z.string().trim().min(1, 'Address is required'),
+  base_currency: z.string().trim().min(1, 'Base currency is required'),
+  company: z.string().trim().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],

@@ -29,28 +29,25 @@ Structure based on `src/pages/`:
 - **Profile:** Merchant account settings.
 
 ## State Management
-- **Framework:** Redux
-- **Middleware:** Redux-Thunk (for asynchronous API calls).
-- **Persistence:** Redux-Persist (saves state across app restarts).
-- **Form Handling:** Redux-Form (syncs form state with the Redux store).
-- **Reducers:**
-    - `auth`: Handles session tokens and authentication status.
-    - `item`: Manages the list of products/services.
-    - `customer`: Manages client data.
-    - `invoice`: Tracks created invoices.
-    - `user`: General user/merchant profile data.
+- **Framework:** Redux Toolkit with RTK Query (`src/store/`).
+- **Persistence:** `redux-persist` on the auth slice (`key: 'auth'`, AsyncStorage) so login survives refresh.
+- **Form Handling:** react-hook-form + zod, with validation mirroring the backend Joi rules (`src/types/schemas.ts`, `src/types/schemas/invoice.schema.ts`).
+- **APIs:** `authApi` (login/register/profile/refresh) and `dataApi` (invoices/customers/items).
 
 ## API & Networking
-- **Base URL:** Configurable in `src/service/api.js` (Default: `http://192.168.1.2:3333`).
-- **Implementation:** Custom `fetchApi` wrapper.
-- **Security:** Uses `x-auth` header for token-based authentication.
-- **Timeout:** 5-second request timeout.
+- **Base URL:** `EXPO_PUBLIC_API_URL` in `.env` (default `http://localhost:3333`). Use the LAN IP on a physical device or `10.0.2.2` on the Android emulator. Restart Expo with `-c` after changing it.
+- **Routes:** items/customers use `POST /<resource>/create` and `PUT /<resource>/:id`; sign-up sends `name, email, password, phone, address, base_currency` and optional `company`.
+- **Security:** Bearer token with refresh flow in `authApi`.
+
+## Invoice Print / PDF
+- Print and Download PDF are available from invoice list rows and from a saved invoice's form (`src/utils/invoicePdf.ts`, `src/features/invoices/hooks/useInvoiceExport.ts`).
+- Web: hidden-iframe print and `html2pdf.js`; mobile: `expo-print` and `expo-sharing`.
 
 ## Tech Stack & Packages
-- **UI Framework:** NativeBase (Cross-platform components).
-- **Navigation:** `react-native-router-flux`.
-- **Date Handling:** `moment`.
-- **Utilities:** `prop-types`, `react-native-safe-area-context`, `react-native-screens`.
+- **Runtime:** Expo 54, React Native 0.81, React 19, TypeScript 5.9.
+- **UI Framework:** Tamagui plus React Native components.
+- **Navigation:** `@react-navigation/*`.
+- **Utilities:** `react-native-safe-area-context`, `react-native-screens`.
 - **Animation/Gestures:** `react-native-reanimated`, `react-native-gesture-handler`.
 - **Storage:** `@react-native-async-storage/async-storage`.
 
@@ -62,24 +59,21 @@ Structure based on `src/pages/`:
 
 ### Key Commands
 - `npm install`: Install dependencies.
-- `npx react-native start`: Start the Metro bundler.
-- `npx react-native run-android`: Build and run on Android.
-- `npx react-native run-ios`: Build and run on iOS.
-- `npm test`: Run Jest unit tests.
-- `npm run lint`: Run ESLint checks.
+- `npm run start` / `npx expo start --web -c`: Start Expo (clean cache).
+- `npm run android` / `npm run ios` / `npm run web`: Run on a platform.
+- `npm run typecheck`: Run TypeScript checks.
 
 ### Environment Setup
-- **Polyfills:** `src/polyfills.js` handles legacy compatibility for React 18, including `ViewPropTypes` and `Picker` patches.
-- **Android Configuration:** 
-    - SDK 34, Gradle 8.8, AGP 8.2.1.
-    - Namespace: `com.invoiceappclient`.
+- `.env`: `EXPO_PUBLIC_API_URL=http://localhost:3333`.
+- `app.json`: the datetimepicker plugin is referenced as `@react-native-community/datetimepicker/app.plugin.js`.
+- `tsconfig.json`: alias `@app-types/*` → `src/types/*`.
 
 ## Project Structure
-- `src/actions/`: Redux action creators.
-- `src/components/`: Reusable presentation components.
-- `src/config/`: Store and global configuration.
-- `src/pages/`: Main screen components.
-- `src/reducers/`: Redux state logic.
-- `src/service/`: API interaction logic.
-- `src/utils/`: Helpers for validation and error handling.
-- `Main.js`: Root navigation entry point.
+- `src/components/`: Reusable presentation components (`ListView` supports row `actions`).
+- `src/features/`: Feature logic (e.g. `invoices/components`, `invoices/hooks`).
+- `src/pages/`: Screens (`authentication/`, `main/`, `form-pages/`, `Profile.tsx`).
+- `src/store/`: Redux Toolkit store, slices and RTK Query APIs.
+- `src/shared/`: Shared forms, errors, observability, logger.
+- `src/types/`: Types and zod schemas.
+- `src/utils/`: Helpers (currencies, `invoicePdf.ts`).
+- `packages/`: Shared packages (`api-contracts`, etc.).

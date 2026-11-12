@@ -179,7 +179,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
   },
-  picker: { minHeight: 40 },
+  picker: {
+    minHeight: 40,
+    paddingHorizontal: 8,
+    ...(Platform.OS === 'web' ? ({ borderWidth: 0, outlineStyle: 'none', backgroundColor: 'transparent' } as object) : {}),
+  },
   primaryButton: {
     marginTop: 12,
     backgroundColor: '#2563eb',

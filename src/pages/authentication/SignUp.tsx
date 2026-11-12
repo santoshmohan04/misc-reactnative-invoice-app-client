@@ -14,11 +14,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, Text as TamaText } from 'tamagui';
-import { registerSchema, type RegisterFormData } from '@types/schemas';
+import { registerSchema, BASE_CURRENCIES, type RegisterFormData } from '@app-types/schemas';
 import { useRegisterMutation } from '@store/apis/authApi';
 import { useAppDispatch, useAuth } from '@store/hooks';
 import { setError as setAuthError } from '@store/slices/authSlice';
-import type { RootStackParamList } from '@types/navigation';
+import type { RootStackParamList } from '@app-types/navigation';
 
 /**
  * Modern SignUp component using react-hook-form
@@ -42,6 +42,10 @@ function SignUp() {
       email: '',
       password: '',
       confirmPassword: '',
+      phone: '',
+      address: '',
+      base_currency: 'USD',
+      company: '',
     },
   });
 
@@ -52,7 +56,8 @@ function SignUp() {
     try {
       dispatch(setAuthError(null));
       // Remove confirmPassword before sending to backend
-      const { confirmPassword, ...registerData } = data;
+      const { confirmPassword, company, ...rest } = data;
+      const registerData = company ? { ...rest, company } : rest;
       await register(registerData).unwrap();
       // Navigation happens automatically via useEffect when isAuthenticated changes
     } catch (err: any) {
@@ -199,6 +204,103 @@ function SignUp() {
             />
           </View>
 
+          {/* Phone Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone</Text>
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field: { value, onChange } }) => (
+                <View>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Phone"
+                    keyboardType="phone-pad"
+                    textContentType="telephoneNumber"
+                  />
+                  {errors.phone && (
+                    <Text style={styles.fieldError}>{errors.phone.message}</Text>
+                  )}
+                </View>
+              )}
+            />
+          </View>
+
+          {/* Address Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address</Text>
+            <Controller
+              control={control}
+              name="address"
+              render={({ field: { value, onChange } }) => (
+                <View>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Address"
+                    textContentType="fullStreetAddress"
+                  />
+                  {errors.address && (
+                    <Text style={styles.fieldError}>{errors.address.message}</Text>
+                  )}
+                </View>
+              )}
+            />
+          </View>
+
+          {/* Company Input (optional) */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Company (optional)</Text>
+            <Controller
+              control={control}
+              name="company"
+              render={({ field: { value, onChange } }) => (
+                <TextInput
+                  style={styles.input}
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Company"
+                  autoCapitalize="words"
+                />
+              )}
+            />
+          </View>
+
+          {/* Base Currency Selector */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Base Currency</Text>
+            <Controller
+              control={control}
+              name="base_currency"
+              render={({ field: { value, onChange } }) => (
+                <View>
+                  <View style={styles.currencyRow}>
+                    {BASE_CURRENCIES.map((code) => (
+                      <Text
+                        key={code}
+                        onPress={() => onChange(code)}
+                        style={[
+                          styles.currencyChip,
+                          value === code && styles.currencyChipActive,
+                        ]}
+                      >
+                        {code}
+                      </Text>
+                    ))}
+                  </View>
+                  {errors.base_currency && (
+                    <Text style={styles.fieldError}>
+                      {errors.base_currency.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+          </View>
+
           {/* Sign Up Button */}
           <Button
             onPress={handleSubmit(onSubmit)}
@@ -310,6 +412,27 @@ const styles = StyleSheet.create({
     color: '#E74C3C',
     fontSize: 12,
     marginTop: 4,
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  currencyChip: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 13,
+    color: '#333',
+    backgroundColor: '#fafafa',
+    overflow: 'hidden',
+  },
+  currencyChipActive: {
+    borderColor: '#27AE60',
+    backgroundColor: '#27AE60',
+    color: '#fff',
   },
   signUpButton: {
     marginTop: 20,

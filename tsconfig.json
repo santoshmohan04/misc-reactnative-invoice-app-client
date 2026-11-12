@@ -17,7 +17,7 @@
       "@shared-ui": ["./packages/shared-ui/src/index.ts"],
       "@config/*": ["./src/config/*"],
       "@store/*": ["./src/store/*"],
-      "@types/*": ["./src/types/*"],
+      "@app-types/*": ["./src/types/*"],
       "@utils/*": ["./src/utils/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@components/*": ["./src/components/*"],

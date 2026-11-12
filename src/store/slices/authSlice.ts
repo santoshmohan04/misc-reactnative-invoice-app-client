@@ -39,8 +39,8 @@ const authSlice = createSlice({
     ) => {
       const { user, access_token, token, refresh_token, refreshToken } = action.payload;
       state.user = user;
-      state.token = access_token ?? token ?? null;
-      state.refreshToken = refresh_token ?? refreshToken ?? null;
+      state.token = access_token ?? token ?? state.token;
+      state.refreshToken = refresh_token ?? refreshToken ?? state.refreshToken;
       state.isAuthenticated = !!(state.token && state.user);
       state.error = null;
     },

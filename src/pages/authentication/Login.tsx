@@ -14,11 +14,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, Text as TamaText } from 'tamagui';
-import { loginSchema, type LoginFormData } from '@types/schemas';
+import { loginSchema, type LoginFormData } from '@app-types/schemas';
 import { useLoginMutation } from '@store/apis/authApi';
 import { useAppDispatch, useAuth } from '@store/hooks';
 import { setError as setAuthError } from '@store/slices/authSlice';
-import type { RootStackParamList } from '@types/navigation';
+import type { RootStackParamList } from '@app-types/navigation';
 
 /**
  * Modern Login component using react-hook-form

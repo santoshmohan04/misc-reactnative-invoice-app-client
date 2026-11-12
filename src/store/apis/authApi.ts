@@ -114,7 +114,15 @@ export const authApi = createApi({
       },
     }),
 
-    register: builder.mutation<any, { email: string; password: string; name: string }>({
+    register: builder.mutation<any, {
+      email: string;
+      password: string;
+      name: string;
+      phone: string;
+      address: string;
+      base_currency: string;
+      company?: string;
+    }>({
       query: (credentials) => ({
         url: API_ENDPOINTS.user.register,
         method: 'POST',

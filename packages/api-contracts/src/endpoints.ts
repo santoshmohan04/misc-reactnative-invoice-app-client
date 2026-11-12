@@ -15,10 +15,12 @@ export const API_ENDPOINTS = {
   },
   customer: {
     all: '/customer/all',
+    create: '/customer/create',
     edit: '/customer/edit',
   },
   item: {
     all: '/item/all',
+    create: '/item/create',
     edit: '/item/edit',
   },
   payment: {

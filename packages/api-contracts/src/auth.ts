@@ -7,6 +7,10 @@ export interface SignupRequestDto {
   name: string;
   email: string;
   password: string;
+  phone: string;
+  address: string;
+  base_currency: string;
+  company?: string;
 }
 
 export interface TokenBundle {

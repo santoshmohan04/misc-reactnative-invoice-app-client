@@ -48,7 +48,11 @@ const FormField: React.FC<FormFieldProps> = ({ label, control, name, rules, inpu
       <View style={styles.fieldWrap}>
         {label ? <Text style={styles.label}>{label}</Text> : null}
         <TextInput
-          style={[FIELD_STYLE, inputProps?.multiline && { minHeight: 80, paddingTop: 10, textAlignVertical: 'top' }]}
+          style={[
+            FIELD_STYLE,
+            inputProps?.multiline && { minHeight: 80, paddingTop: 10, textAlignVertical: 'top' },
+            error && { borderColor: '#f32013' },
+          ]}
           value={value ?? ''}
           onChangeText={onChange}
           onBlur={onBlur}
@@ -71,6 +75,7 @@ const ItemForm: React.FC = () => {
   const [upsertItem, { isLoading }] = useUpsertItemMutation();
 
   const { control, handleSubmit } = useForm<ItemFormValues>({
+    mode: 'onTouched',
     defaultValues: {
       name: item?.name ?? '',
       price: item?.price != null ? String(item.price) : '',
@@ -80,15 +85,16 @@ const ItemForm: React.FC = () => {
 
   const onSubmit = async (values: ItemFormValues): Promise<void> => {
     const price = parseFloat(values.price);
-    if (Number.isNaN(price) || price <= 0) {
+    if (Number.isNaN(price) || price < 0) {
       return;
     }
 
     try {
+      const description = values.description?.trim();
       const payload = {
-        name: values.name,
+        name: values.name.trim(),
         price,
-        description: values.description,
+        ...(description && { description }),
         ...(item?._id && { _id: item._id }),
       };
       await upsertItem(payload).unwrap();
@@ -109,7 +115,15 @@ const ItemForm: React.FC = () => {
             label="Item Name *"
             control={control}
             name="name"
-            rules={{ required: 'Name is required', minLength: { value: 2, message: 'At least 2 characters' } }}
+            rules={{
+              required: 'Name is required',
+              validate: (value: string) => {
+                const len = value.trim().length;
+                if (len < 4) return 'Name must be at least 4 characters';
+                if (len > 100) return 'Name must be at most 100 characters';
+                return true;
+              },
+            }}
             inputProps={{ placeholder: 'Item Name', keyboardType: 'default' }}
           />
           <FormField
@@ -118,7 +132,7 @@ const ItemForm: React.FC = () => {
             name="price"
             rules={{
               required: 'Price is required',
-              validate: (value: string) => (!Number.isNaN(parseFloat(value)) && parseFloat(value) > 0) || 'Must be a positive number',
+              validate: (value: string) => (!Number.isNaN(parseFloat(value)) && parseFloat(value) >= 0) || 'Must be a non-negative number',
             }}
             inputProps={{ placeholder: '0.00', keyboardType: 'decimal-pad' }}
           />
@@ -126,6 +140,7 @@ const ItemForm: React.FC = () => {
             label="Description"
             control={control}
             name="description"
+            rules={{ maxLength: { value: 500, message: 'Description must be at most 500 characters' } }}
             inputProps={{ placeholder: 'Description', multiline: true, numberOfLines: 3 }}
           />
         </View>
